@@ -444,7 +444,7 @@ The backend standardises on Java 21 and Spring Boot 3.x with Spring Cloud; every
 | Saga orchestration | Custom orchestrator in Loan Service with Spring State Machine; Temporal as upgrade path | Explicit, auditable funding flow |
 | Documents | OpenPDF or iText (agreements), Thymeleaf templates | Versioned agreement generation |
 | API docs | springdoc-openapi (OpenAPI 3.1) | Contracts from code; client generation |
-| Build | Gradle (Kotlin DSL) or Maven, multi-repo with a shared BOM and platform starter library | Consistent dependencies across services |
+| Build | Maven (multi-module, Maven Wrapper) in a monorepo, with a parent POM, a shared BOM and a platform starter library | Consistent dependencies across services |
 
 ### Data and storage
 

@@ -3,7 +3,9 @@
 Product spec: docs/PRD.md (read the relevant sections before any task).
 
 ## Stack
-- Java 21, Spring Boot 3.x, Spring Cloud, Gradle (Kotlin DSL) multi-project monorepo
+- Java 21, Spring Boot 3.x, Spring Cloud, Maven (Maven Wrapper, ./mvnw) multi-module monorepo
+  with a root aggregator POM, a parent POM for shared plugin/Java 21 settings, and a BOM for
+  dependency versions
 - PostgreSQL (one database per service), Flyway migrations
 - Kafka with Avro + schema registry, transactional outbox pattern
 - Keycloak for auth; services are OAuth2 resource servers
@@ -22,7 +24,7 @@ Product spec: docs/PRD.md (read the relevant sections before any task).
 - platform/bom – shared dependency versions
 - platform/starter – shared library: error handling (RFC 9457), correlation ids,
   security config, outbox, idempotency, logging, OpenTelemetry
-- services/<service-name> – one Gradle module per service
+- services/<service-name> – one Maven module per service
 - infra/docker-compose – local Postgres, Kafka, Schema Registry, Redis, Keycloak, MinIO
 - docs/ – PRD, ADRs (docs/adr/), API notes
 
@@ -35,7 +37,8 @@ Product spec: docs/PRD.md (read the relevant sections before any task).
 - External providers (KYC, payments, SMS, email) sit behind interfaces, with a fake
   implementation for local development and tests.
 - Package by feature: api / application / domain / infrastructure.
-- Write tests with every change; run ./gradlew build before saying a task is done.
+- Write tests with every change; run ./mvnw verify before saying a task is done.
+- All application and test code is Java 21 with Spring Boot 3.x; do not use Kotlin.
 - No secrets in code; use environment variables.
 - Record architectural decisions as short ADRs in docs/adr/.
 - Ask before adding a new library not listed above.
