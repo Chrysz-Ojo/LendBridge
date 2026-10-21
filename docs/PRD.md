@@ -1,14 +1,14 @@
-# Loan Den — Product Requirements Document (Microservices, v2.0)
+# LendBridge — Product Requirements Document (Microservices, v2.0)
 
 Oct 21, 2026 · @Noah
 
 ## 1. Document control and executive summary
 
-Loan Den v2.0 rebuilds the completed MVP as a production-grade, event-driven microservices platform on Spring Boot, Kafka and Kubernetes, so lending, payments and risk can scale and ship independently.
+LendBridge v2.0 rebuilds the completed MVP as a production-grade, event-driven microservices platform on Spring Boot, Kafka and Kubernetes, so lending, payments and risk can scale and ship independently.
 
 | Field | Value |
 | --- | --- |
-| Product | Loan Den: peer-to-peer (P2P) lending platform |
+| Product | LendBridge: peer-to-peer (P2P) lending platform |
 | Version | 2.0 (microservices re-platform of the MVP) |
 | Product Manager | Abdullahi Fariu-Arebi |
 | Product Designer | Godswill Desmond |
@@ -18,7 +18,7 @@ Loan Den v2.0 rebuilds the completed MVP as a production-grade, event-driven mic
 
 ### Executive summary
 
-Loan Den connects borrowers directly with individual lenders. Borrowers get faster, cheaper credit than traditional banks offer; lenders earn interest and spread risk across many loans.
+LendBridge connects borrowers directly with individual lenders. Borrowers get faster, cheaper credit than traditional banks offer; lenders earn interest and spread risk across many loans.
 
 The MVP proved the flow end to end: register, verify, apply or invest, match, fund, repay, track. v2.0 keeps every MVP feature and splits the system into 16 domain services behind an API gateway. Each service owns its data and talks to others through REST (synchronous queries) and Kafka events (state changes).
 
@@ -85,13 +85,13 @@ Success means a borrower is verified and listed in under 10 minutes, funded in u
 ### Assumptions
 
 - Loans are single-borrower, and one loan can be funded by one or many lenders (fractional funding).
-- Money is held in segregated accounts with a licensed partner bank or payment provider, never in Loan Den's operating account.
+- Money is held in segregated accounts with a licensed partner bank or payment provider, never in LendBridge's operating account.
 - Interest is simple interest on reducing balance, repaid in equal monthly instalments, unless Product changes it.
 - Nigeria is the only launch market; amounts are NGN stored in kobo (integer minor units).
 
 ### Open questions
 
-- Which licence route will Loan Den operate under (digital lending registration with FCCPC, SEC crowdfunding rules, or a partner licence)? Legal to confirm.
+- Which licence route will LendBridge operate under (digital lending registration with FCCPC, SEC crowdfunding rules, or a partner licence)? Legal to confirm.
 - Who carries default risk: lenders only, or is there a provision fund?
 - Fee model: borrower origination fee, lender service fee on interest, or both?
 - Payment and KYC vendors: final choice after commercial review (candidates are listed in section 7).
@@ -105,7 +105,7 @@ Four personas drive the requirements: two marketplace users and two internal ope
 | Individual borrower | Salaried worker or freelancer needing ₦50k–₦2m for rent, school fees, emergencies | Fast decision, fair rate, clear repayment schedule | Bank paperwork; predatory loan apps |
 | SME borrower | Small business owner needing ₦500k–₦10m working capital | Larger amounts, longer tenors, business-plan upload | Collateral demands; slow approvals |
 | Individual lender | Professional with idle savings wanting better returns than savings accounts | Clear risk view, diversification, steady repayments | Low deposit rates; no visibility into risk |
-| Operations admin | Loan Den staff in KYC, risk, support and finance | Review queues, audit trail, reconciliation, dispute tools | Manual spreadsheets in the MVP |
+| Operations admin | LendBridge staff in KYC, risk, support and finance | Review queues, audit trail, reconciliation, dispute tools | Manual spreadsheets in the MVP |
 
 One account can hold both lender and borrower roles. The role chosen at onboarding sets the default dashboard; the other role can be activated later.
 
@@ -150,7 +150,7 @@ The platform delivers 11 epics: the 8 MVP epics for lenders and borrowers, plus 
 
 | ID | User story | Acceptance criteria | Priority | Service |
 | --- | --- | --- | --- | --- |
-| E1-S1 | As a visitor, I want to sign up with name, email, phone and password so I can use Loan Den. | Password ≥ 10 chars with complexity rules; email and phone unique; terms and privacy consent stored with version and timestamp; OTP sent to phone and link to email; account inactive until both verified. | P0 | Authentication |
+| E1-S1 | As a visitor, I want to sign up with name, email, phone and password so I can use LendBridge. | Password ≥ 10 chars with complexity rules; email and phone unique; terms and privacy consent stored with version and timestamp; OTP sent to phone and link to email; account inactive until both verified. | P0 | Authentication |
 | E1-S2 | As a user, I want to log in securely. | Login by email or phone; lockout after 5 failed attempts for 15 minutes; JWT access token (15 min) and rotating refresh token (7 days); new-device login triggers an alert. | P0 | Authentication |
 | E1-S3 | As a user, I want two-factor authentication to protect my money. | TOTP or SMS OTP; mandatory before any withdrawal, bank-account change or first investment. | P0 | Authentication |
 | E1-S4 | As a user, I want to reset my password. | Reset link valid 30 minutes, single use; all sessions revoked after reset. | P0 | Authentication |
@@ -277,7 +277,7 @@ The platform delivers 11 epics: the 8 MVP epics for lenders and borrowers, plus 
 
 ## 5. Microservices architecture and service catalogue
 
-Loan Den v2.0 runs 16 domain services behind one API gateway on Kubernetes; services own their data, query each other over REST or gRPC, and announce every state change on Kafka.
+LendBridge v2.0 runs 16 domain services behind one API gateway on Kubernetes; services own their data, query each other over REST or gRPC, and announce every state change on Kafka.
 
 &#91;embedded content: target architecture · 16 domain services in 5 squads\]
 
@@ -524,7 +524,7 @@ Every vendor sits behind a port-and-adapter interface in its service, so a provi
 
 ## 8. Security, compliance and non-functional requirements
 
-Loan Den handles identity data and other people's money, so security and compliance are launch blockers, not hardening tasks. The regulatory list below must be confirmed by Legal before build starts.
+LendBridge handles identity data and other people's money, so security and compliance are launch blockers, not hardening tasks. The regulatory list below must be confirmed by Legal before build starts.
 
 ### Regulatory and compliance requirements
 
@@ -535,7 +535,7 @@ Loan Den handles identity data and other people's money, so security and complia
 | Investment / crowdfunding | SEC Nigeria rules if the lender side is treated as an investment offering (confirm route) | Investor disclosures, risk warnings, limits per investor if required |
 | AML / CFT | CBN AML rules, Nigerian Financial Intelligence Unit reporting | KYC tiers, sanctions and PEP screening, transaction monitoring rules, suspicious activity reports, record keeping |
 | Payments | Funds held by a licensed partner (bank or PSP) | Segregated customer-money accounts; no customer funds in operating accounts |
-| Card data | PCI DSS | Cards tokenised by the PSP; Loan Den never stores or transmits card numbers |
+| Card data | PCI DSS | Cards tokenised by the PSP; LendBridge never stores or transmits card numbers |
 | Record keeping | Retain customer and transaction records for the legally required period (at least 5 years after relationship ends; confirm) | Audit Service archive with object lock |
 | Legal records | Customer interactions stored for legal purposes | Chat, tickets, agreement versions and consents retained and exportable |
 

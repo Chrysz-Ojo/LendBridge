@@ -1,4 +1,4 @@
-# Loan Den – engineering rules
+# LendBridge – engineering rules
 
 Product spec: docs/PRD.md (read the relevant sections before any task).
 
