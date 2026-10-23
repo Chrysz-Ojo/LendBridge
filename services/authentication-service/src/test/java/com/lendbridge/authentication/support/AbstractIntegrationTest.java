@@ -11,15 +11,17 @@ import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 /**
  * Shared Testcontainers fixture: Postgres + Kafka + a plain GenericContainer running Confluent's
  * Schema Registry on the same network (no official Confluent Testcontainers module exists).
+ *
+ * <p>These are started manually below rather than via {@code @Testcontainers}/{@code @Container},
+ * which would stop them in {@code afterAll()} of whichever IT class happens to run first — even
+ * though the fields are static. Manual start keeps one singleton set of containers alive for the
+ * whole suite; Ryuk reaps them at JVM exit.
  */
-@Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 public abstract class AbstractIntegrationTest {
@@ -27,20 +29,17 @@ public abstract class AbstractIntegrationTest {
   private static final Network NETWORK = Network.newNetwork();
   private static final String FIELD_ENCRYPTION_KEY = randomBase64Key();
 
-  @Container
   static final PostgreSQLContainer<?> POSTGRES =
       new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"))
           .withDatabaseName("authentication_db")
           .withUsername("authentication_service")
           .withPassword("test-password");
 
-  @Container
   static final KafkaContainer KAFKA =
       new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.7.1"))
           .withNetwork(NETWORK)
           .withNetworkAliases("kafka");
 
-  @Container
   static final GenericContainer<?> SCHEMA_REGISTRY =
       new GenericContainer<>(DockerImageName.parse("confluentinc/cp-schema-registry:7.7.1"))
           .withNetwork(NETWORK)
@@ -50,6 +49,12 @@ public abstract class AbstractIntegrationTest {
           .withEnv("SCHEMA_REGISTRY_LISTENERS", "http://0.0.0.0:8081")
           .withEnv("SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS", "PLAINTEXT://kafka:9092")
           .dependsOn(KAFKA);
+
+  static {
+    POSTGRES.start();
+    KAFKA.start();
+    SCHEMA_REGISTRY.start();
+  }
 
   @DynamicPropertySource
   static void registerProperties(DynamicPropertyRegistry registry) {
