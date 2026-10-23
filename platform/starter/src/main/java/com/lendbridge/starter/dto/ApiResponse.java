@@ -1,4 +1,4 @@
-package com.lendbridge.authentication.dto;
+package com.lendbridge.starter.dto;
 
 import java.time.Instant;
 import lombok.AllArgsConstructor;
@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /** Generic success-response envelope. Error responses are unaffected and keep using RFC 9457
- * {@code ProblemDetail} via {@link com.lendbridge.authentication.exception.GlobalExceptionHandler}. */
+ * {@code ProblemDetail} via {@link com.lendbridge.starter.exception.GlobalExceptionHandler}. */
 @Data
 @Builder
 @NoArgsConstructor

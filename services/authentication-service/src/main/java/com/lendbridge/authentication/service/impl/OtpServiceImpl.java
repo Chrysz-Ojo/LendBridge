@@ -3,8 +3,8 @@ package com.lendbridge.authentication.service.impl;
 import com.lendbridge.authentication.service.OtpService;
 
 import com.lendbridge.authentication.crypto.OpaqueTokenGenerator;
-import com.lendbridge.authentication.crypto.UuidV7;
-import com.lendbridge.authentication.exception.BadRequestException;
+import com.lendbridge.starter.crypto.UuidV7;
+import com.lendbridge.starter.exception.BadRequestException;
 import com.lendbridge.authentication.notification.SmsSender;
 import com.lendbridge.authentication.model.OtpChallenge;
 import com.lendbridge.authentication.model.OtpPurpose;

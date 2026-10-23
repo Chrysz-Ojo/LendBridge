@@ -11,7 +11,7 @@ import com.lendbridge.authentication.dto.TokenResponse;
 import com.lendbridge.authentication.dto.TotpEnrollResponse;
 import com.lendbridge.authentication.crypto.TotpAlgorithm;
 import com.lendbridge.authentication.crypto.Base32;
-import com.lendbridge.authentication.dto.ApiResponse;
+import com.lendbridge.starter.dto.ApiResponse;
 import com.lendbridge.authentication.support.AbstractIntegrationTest;
 import java.time.Instant;
 import java.util.Map;

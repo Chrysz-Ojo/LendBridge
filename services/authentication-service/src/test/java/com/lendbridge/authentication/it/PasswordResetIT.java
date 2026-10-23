@@ -8,7 +8,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lendbridge.authentication.dto.LoginResponse;
 import com.lendbridge.authentication.notification.FakeEmailSender;
-import com.lendbridge.authentication.dto.ApiResponse;
+import com.lendbridge.starter.dto.ApiResponse;
 import com.lendbridge.authentication.support.AbstractIntegrationTest;
 import java.util.Map;
 import java.util.UUID;
