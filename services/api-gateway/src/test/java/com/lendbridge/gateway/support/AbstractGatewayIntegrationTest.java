@@ -39,13 +39,12 @@ public abstract class AbstractGatewayIntegrationTest {
   }
 
   /**
-   * Registers the whole route definition here rather than letting it merge with
-   * application.yml's: Spring Cloud Gateway's relaxed binding for {@code
-   * GatewayProperties.routes[0]} doesn't reliably merge sibling fields (e.g. {@code
-   * filters[0].name}) across different property sources — once any key under an indexed list
-   * element comes from a higher-precedence source, sibling keys from a lower one can go missing
-   * and binding fails validation. Keeping every field for routes[0] in this one dynamic property
-   * source (subclasses override just the numeric rate-limit args) avoids that entirely.
+   * Only overrides id/uri/predicates here — the route's {@code filters} (the RequestRateLimiter
+   * config) are left to merge from application.yml untouched. Mixing dynamic-property keys under
+   * {@code routes[0].filters[...]} with the YAML-defined ones was tried and reliably broke
+   * binding validation (sibling fields of the same indexed list element don't merge cleanly
+   * across different property sources). RateLimitIT tunes the rate limiter in Java instead, via
+   * {@code RedisRateLimiter}'s own per-route Config map.
    */
   @DynamicPropertySource
   static void registerProperties(DynamicPropertyRegistry registry) {
@@ -56,19 +55,6 @@ public abstract class AbstractGatewayIntegrationTest {
     registry.add(
         "spring.cloud.gateway.routes[0].predicates[0]",
         () -> "Path=/api/v1/auth/**,/.well-known/jwks.json");
-    registry.add("spring.cloud.gateway.routes[0].filters[0].name", () -> "RequestRateLimiter");
-    // Bracket notation, not dotted: the key itself contains a dot ("redis-rate-limiter.
-    // replenishRate"), and from a property-style source (unlike YAML) a plain dotted suffix
-    // after a Map<String,String> property is read as further nesting, not a literal map key.
-    registry.add(
-        "spring.cloud.gateway.routes[0].filters[0].args[redis-rate-limiter.replenishRate]",
-        () -> "20");
-    registry.add(
-        "spring.cloud.gateway.routes[0].filters[0].args[redis-rate-limiter.burstCapacity]",
-        () -> "40");
-    registry.add(
-        "spring.cloud.gateway.routes[0].filters[0].args[key-resolver]",
-        () -> "#{@ipKeyResolver}");
     registry.add(
         "spring.security.oauth2.resourceserver.jwt.jwk-set-uri",
         () -> authServiceStub.jwksUrl());

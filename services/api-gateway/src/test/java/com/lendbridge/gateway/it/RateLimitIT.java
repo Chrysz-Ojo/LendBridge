@@ -3,23 +3,44 @@ package com.lendbridge.gateway.it;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.lendbridge.gateway.support.AbstractGatewayIntegrationTest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
 import org.springframework.http.HttpStatus;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 
-/** Separate test class so its tight rate-limit config doesn't affect {@link GatewayRoutingIT}'s
- * Spring context (different @DynamicPropertySource values give it its own cached context). */
+/**
+ * Mutates the real {@link RedisRateLimiter}'s per-route {@code Config} map directly rather than
+ * trying to override its YAML-bound args via properties: the args map keys contain literal dots
+ * (e.g. "redis-rate-limiter.replenishRate"), and property-style dynamic sources don't bind those
+ * the same way YAML does, however they're spelled. This Config map is RedisRateLimiter's own
+ * public extension point and sidesteps that entirely. Config is restored after the test since
+ * this shares a cached Spring context with {@link GatewayRoutingIT}.
+ */
 class RateLimitIT extends AbstractGatewayIntegrationTest {
 
-  @DynamicPropertySource
-  static void tightRateLimit(DynamicPropertyRegistry registry) {
-    registry.add(
-        "spring.cloud.gateway.routes[0].filters[0].args[redis-rate-limiter.replenishRate]",
-        () -> "1");
-    registry.add(
-        "spring.cloud.gateway.routes[0].filters[0].args[redis-rate-limiter.burstCapacity]",
-        () -> "2");
+  private static final String ROUTE_ID = "authentication-service";
+
+  @Autowired private RedisRateLimiter redisRateLimiter;
+
+  private RedisRateLimiter.Config originalConfig;
+
+  @BeforeEach
+  void tightenRateLimit() {
+    originalConfig = redisRateLimiter.getConfig().get(ROUTE_ID);
+    redisRateLimiter
+        .getConfig()
+        .put(ROUTE_ID, new RedisRateLimiter.Config().setReplenishRate(1).setBurstCapacity(2));
+  }
+
+  @AfterEach
+  void restoreRateLimit() {
+    if (originalConfig != null) {
+      redisRateLimiter.getConfig().put(ROUTE_ID, originalConfig);
+    } else {
+      redisRateLimiter.getConfig().remove(ROUTE_ID);
+    }
   }
 
   @Test
