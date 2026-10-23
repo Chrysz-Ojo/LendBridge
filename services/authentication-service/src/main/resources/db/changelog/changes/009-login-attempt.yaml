@@ -1,0 +1,47 @@
+databaseChangeLog:
+  - changeSet:
+      id: 009-login-attempt
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: login_attempt
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+              - column:
+                  name: identifier
+                  type: varchar(320)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: success
+                  type: boolean
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ip_address
+                  type: varchar(64)
+              - column:
+                  name: user_agent
+                  type: varchar(512)
+              - column:
+                  name: failure_reason
+                  type: varchar(64)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: login_attempt
+            indexName: idx_login_attempt_user_id
+            columns:
+              - column:
+                  name: user_id

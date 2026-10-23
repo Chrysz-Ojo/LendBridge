@@ -16,5 +16,6 @@
     <module>platform/parent</module>
     <module>platform/bom</module>
     <module>platform/starter</module>
+    <module>services/authentication-service</module>
   </modules>
 </project>

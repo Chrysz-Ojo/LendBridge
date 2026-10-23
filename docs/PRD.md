@@ -300,7 +300,7 @@ Only the Ledger Service can move money; Wallet balances are views over the ledge
 | --- | --- | --- | --- |
 | API Gateway | Single entry point: routing, TLS, JWT validation, rate limiting, request ids, CORS | — | Spring Cloud Gateway; WebSocket pass-through for chat |
 | Admin BFF | Aggregates data for the back-office; enforces staff roles and maker-checker | — | Reachable only over VPN and staff SSO |
-| Authentication | Sign-up, login, MFA, tokens, password reset, roles; wraps Keycloak | user.registered | Keycloak realm per environment |
+| Authentication | Sign-up, login, MFA, tokens, password reset, roles; own JWT issuer | user.registered | Issues and validates its own OAuth2/OIDC-style JWTs; no external identity provider |
 | User Profile | Personal, employment and income data; role flags; preferences | profile.updated | PII encrypted at field level |
 | KYC | BVN, ID, liveness, bank-statement checks; trust tier; manual review cases | kyc.verified, kyc.rejected | Provider adapters with fallback |
 | Document | Uploads, virus scan, encrypted storage, signed URLs; agreement PDFs | document.uploaded | Pre-signed S3 URLs, 5-minute expiry |
@@ -325,7 +325,7 @@ Each service owns its database and publishes its state changes as Kafka events t
 
 | Service | Datastore | Key entities |
 | --- | --- | --- |
-| Authentication | Keycloak (PostgreSQL) | Users, credentials, roles, MFA, sessions |
+| Authentication | PostgreSQL | Users, credentials, roles, MFA, sessions |
 | User Profile | PostgreSQL | Profile, employment, income, role flags, preferences |
 | KYC | PostgreSQL | Verification case, BVN result, liveness result, trust tier |
 | Document | PostgreSQL + S3-compatible object storage | Document metadata, file pointer, checksum, scan status |
@@ -345,7 +345,7 @@ Each service owns its database and publishes its state changes as Kafka events t
 Common data rules:
 
 - Primary keys are UUID v7 (time-ordered); money is BIGINT kobo plus a currency code.
-- Schema changes go through Flyway migrations in each service repository, backward compatible for one release.
+- Schema changes go through Liquibase migrations in each service repository, backward compatible for one release.
 - PII columns (BVN, ID number, phone, DOB, address) are encrypted at field level with keys from the KMS/Vault; BVN is also stored as a salted hash for lookups.
 - Soft delete only where retention rules require history; hard deletion on erasure requests where the law allows.
 
@@ -430,7 +430,7 @@ The backend standardises on Java 21 and Spring Boot 3.x with Spring Cloud; every
 | Language and runtime | Java 21 LTS (virtual threads enabled) | Long-term support; virtual threads simplify high-concurrency I/O |
 | Framework | Spring Boot 3.x | Team standard; mature for fintech |
 | Web | Spring Web MVC; Spring WebFlux only for the gateway and chat | Simpler debugging; reactive where streaming matters |
-| Persistence | Spring Data JPA (Hibernate), Flyway migrations | Standard ORM with versioned schema |
+| Persistence | Spring Data JPA (Hibernate), Liquibase migrations | Standard ORM with versioned schema |
 | Messaging | Apache Kafka, Spring for Apache Kafka, Confluent Schema Registry (Avro) | Durable, ordered, replayable events |
 | Outbox / CDC | Transactional outbox table + Debezium connector | Atomic "save and publish" without dual writes |
 | Service calls | Spring Cloud OpenFeign; gRPC (grpc-spring) for hot paths | Declarative clients; low latency where needed |
@@ -438,7 +438,7 @@ The backend standardises on Java 21 and Spring Boot 3.x with Spring Cloud; every
 | API gateway | Spring Cloud Gateway | Routing, JWT validation, rate limiting, request ids |
 | Configuration | Spring Cloud Config (Git-backed) or Kubernetes ConfigMaps; secrets in HashiCorp Vault via Spring Cloud Vault | Central config; no secrets in code |
 | Service discovery | Kubernetes DNS services (no Eureka needed on K8s) | Fewer moving parts |
-| Security | Spring Security 6, OAuth2 Resource Server, Keycloak as identity provider (OIDC) | Standards-based auth, MFA, RBAC out of the box |
+| Security | Spring Security 6, OAuth2 Resource Server; Authentication Service issues and signs its own JWTs (OIDC-style) | Standards-based auth, MFA, RBAC out of the box |
 | Mapping and validation | MapStruct, Jakarta Bean Validation | Compile-time mapping; consistent input rules |
 | Scheduling | Spring Scheduler + ShedLock (distributed locks); Quartz for complex jobs | Repayment due checks run once across replicas |
 | Saga orchestration | Custom orchestrator in Loan Service with Spring State Machine; Temporal as upgrade path | Explicit, auditable funding flow |
@@ -541,7 +541,7 @@ LendBridge handles identity data and other people's money, so security and compl
 
 ### Security controls
 
-- **Identity and access**: OIDC via Keycloak; MFA for all users before money movement; admin SSO with mandatory MFA and IP allow-listing; RBAC per endpoint; short-lived tokens.
+- **Identity and access**: Authentication Service as its own OAuth2/OIDC-style JWT issuer; MFA for all users before money movement; admin SSO with mandatory MFA and IP allow-listing; RBAC per endpoint; short-lived tokens.
 - **Encryption**: TLS 1.2+ everywhere, mTLS between services; AES-256 at rest for databases and object storage; field-level encryption for PII; keys in KMS/Vault with rotation.
 - **Application security**: OWASP ASVS Level 2 as the baseline; input validation; output encoding; CSRF protection on the web app; strict CORS and CSP.
 - **Fraud controls**: velocity limits on sign-ups, loan requests and withdrawals; device fingerprinting; duplicate BVN and bank-account detection; rule engine to hold suspicious transactions for review.

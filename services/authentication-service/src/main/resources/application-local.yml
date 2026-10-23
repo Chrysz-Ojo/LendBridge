@@ -1,0 +1,14 @@
+# Local-development-only defaults. Never use these values outside a developer's own machine;
+# production configuration must come entirely from environment variables (CLAUDE.md "no secrets
+# in code").
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/authentication_db
+    username: authentication_service
+    password: local-dev-only-password
+
+auth:
+  field-encryption:
+    key: qdHFMHAAliRQNVCVXYj+X/vLknt+DKVGWmnelgYOudk=
+  phone-hash:
+    pepper: local-dev-only-phone-hash-pepper-do-not-use-in-prod
