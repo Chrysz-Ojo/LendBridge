@@ -64,7 +64,7 @@ public class LoginServiceImpl implements LoginService {
   private final EmailSender emailSender;
 
   @Override
-  @Transactional
+  @Transactional(noRollbackFor = {UnauthorizedException.class, LockedAccountException.class})
   public LoginResponse login(LoginRequest request, String ipAddress, String deviceInfo) {
     String identifier = request.getIdentifier();
     User user = findByIdentifier(identifier).orElse(null);
@@ -144,7 +144,7 @@ public class LoginServiceImpl implements LoginService {
   }
 
   @Override
-  @Transactional
+  @Transactional(noRollbackFor = UnauthorizedException.class)
   public TokenResponse refresh(RefreshRequest request, String ipAddress, String deviceInfo) {
     String hash = opaqueTokenGenerator.hash(request.getRefreshToken());
     RefreshToken current =
