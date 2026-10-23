@@ -38,6 +38,11 @@ class RateLimitIT extends AbstractGatewayIntegrationTest {
   void tightenRateLimit() {
     List<Route> routes = routeLocator.getRoutes().collectList().block();
     log.info("DIAGNOSTIC registered route ids: {}", routes.stream().map(Route::getId).toList());
+    routes.stream()
+        .filter(r -> r.getId().equals(ROUTE_ID))
+        .findFirst()
+        .ifPresent(
+            r -> log.info("DIAGNOSTIC filters on route '{}': {}", ROUTE_ID, r.getFilters()));
 
     originalConfig = redisRateLimiter.getConfig().get(ROUTE_ID);
     redisRateLimiter
