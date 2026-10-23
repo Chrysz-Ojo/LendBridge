@@ -1,6 +1,6 @@
-package com.lendbridge.authentication.config;
+package com.lendbridge.starter.web;
 
-import com.lendbridge.authentication.crypto.UuidV7;
+import com.lendbridge.starter.crypto.UuidV7;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

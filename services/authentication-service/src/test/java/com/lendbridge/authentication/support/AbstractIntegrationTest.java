@@ -108,7 +108,7 @@ public abstract class AbstractIntegrationTest {
     java.time.Instant now = java.time.Instant.now();
     com.lendbridge.authentication.model.User user =
         com.lendbridge.authentication.model.User.builder()
-            .id(com.lendbridge.authentication.crypto.UuidV7.generate())
+            .id(com.lendbridge.starter.crypto.UuidV7.generate())
             .email(email)
             .phone(phone)
             .phoneHash(hmacPhoneHasher.hash(phone))

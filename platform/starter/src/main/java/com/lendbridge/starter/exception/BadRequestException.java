@@ -1,4 +1,4 @@
-package com.lendbridge.authentication.exception;
+package com.lendbridge.starter.exception;
 
 import org.springframework.http.HttpStatus;
 

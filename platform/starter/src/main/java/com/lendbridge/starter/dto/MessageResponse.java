@@ -1,4 +1,4 @@
-package com.lendbridge.authentication.dto;
+package com.lendbridge.starter.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

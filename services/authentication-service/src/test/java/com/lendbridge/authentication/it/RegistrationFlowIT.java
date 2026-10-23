@@ -13,7 +13,7 @@ import com.lendbridge.authentication.notification.FakeSmsSender;
 import com.lendbridge.authentication.outbox.KafkaTopics;
 import com.lendbridge.authentication.repository.OutboxEventRepository;
 import com.lendbridge.authentication.model.OutboxStatus;
-import com.lendbridge.authentication.dto.ApiResponse;
+import com.lendbridge.starter.dto.ApiResponse;
 import com.lendbridge.authentication.support.AbstractIntegrationTest;
 import com.lendbridge.authentication.model.UserStatus;
 import com.lendbridge.authentication.repository.UserJpaRepository;

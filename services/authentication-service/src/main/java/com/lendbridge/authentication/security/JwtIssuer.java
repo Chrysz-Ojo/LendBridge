@@ -1,6 +1,6 @@
 package com.lendbridge.authentication.security;
 
-import com.lendbridge.authentication.crypto.UuidV7;
+import com.lendbridge.starter.crypto.UuidV7;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;

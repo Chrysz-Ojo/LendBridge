@@ -2,6 +2,7 @@ package com.lendbridge.authentication.config;
 
 import com.lendbridge.authentication.security.JwtIssuer;
 import com.lendbridge.authentication.security.JwtKeyProvider;
+import com.lendbridge.starter.web.CorrelationIdFilter;
 import java.util.Collection;
 import java.util.List;
 import org.springframework.context.annotation.Bean;

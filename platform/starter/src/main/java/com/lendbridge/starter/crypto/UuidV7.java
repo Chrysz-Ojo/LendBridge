@@ -1,4 +1,4 @@
-package com.lendbridge.authentication.crypto;
+package com.lendbridge.starter.crypto;
 
 import java.security.SecureRandom;
 import java.util.UUID;

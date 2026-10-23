@@ -1,6 +1,6 @@
-package com.lendbridge.authentication.exception;
+package com.lendbridge.starter.exception;
 
-import com.lendbridge.authentication.config.CorrelationIdFilter;
+import com.lendbridge.starter.web.CorrelationIdFilter;
 import java.util.stream.Collectors;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;

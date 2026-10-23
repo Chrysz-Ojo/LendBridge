@@ -2,7 +2,7 @@ package com.lendbridge.authentication.outbox;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lendbridge.authentication.crypto.UuidV7;
+import com.lendbridge.starter.crypto.UuidV7;
 import com.lendbridge.authentication.model.OutboxEvent;
 import com.lendbridge.authentication.model.OutboxStatus;
 import com.lendbridge.authentication.repository.OutboxEventRepository;
