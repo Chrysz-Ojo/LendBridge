@@ -1,7 +1,5 @@
 package com.lendbridge.gateway.support;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -11,9 +9,15 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /**
- * Shared fixture: Redis (singleton, started manually — see the note on why {@code @Container}/
- * {@code @Testcontainers} must NOT be used here, in authentication-service's
- * AbstractIntegrationTest) plus a stub standing in for authentication-service.
+ * Shared fixture: Redis and the authentication-service stub are both JVM-lifetime singletons,
+ * started once in a static initializer and never stopped mid-suite. This field is declared once
+ * here and shared by every subclass (RateLimitIT, GatewayRoutingIT, ...) — starting/stopping it
+ * per subclass via @BeforeAll/@AfterAll broke as soon as two subclasses became cache-equivalent
+ * (identical @DynamicPropertySource values) and started sharing one Spring context: whichever
+ * subclass's @AfterAll ran first killed the stub out from under the other's already-built
+ * ReactiveJwtDecoder, which had its JWKS URI baked in at context-creation time. Same lesson as
+ * authentication-service's AbstractIntegrationTest: don't tie a shared static fixture's lifecycle
+ * to any one subclass's test lifecycle.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient(timeout = "10000")
@@ -22,20 +26,10 @@ public abstract class AbstractGatewayIntegrationTest {
   static final GenericContainer<?> REDIS =
       new GenericContainer<>(DockerImageName.parse("redis:7-alpine")).withExposedPorts(6379);
 
+  protected static final AuthServiceStub authServiceStub = AuthServiceStub.start();
+
   static {
     REDIS.start();
-  }
-
-  protected static AuthServiceStub authServiceStub;
-
-  @BeforeAll
-  static void startStub() {
-    authServiceStub = AuthServiceStub.start();
-  }
-
-  @AfterAll
-  static void stopStub() {
-    authServiceStub.stop();
   }
 
   /**
