@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.gateway.filter.ratelimit.RateLimiter;
 import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
 import org.springframework.cloud.gateway.route.Route;
 import org.springframework.cloud.gateway.route.RouteLocator;
@@ -55,6 +56,18 @@ class RateLimitIT extends AbstractGatewayIntegrationTest {
       redisRateLimiter.getConfig().put(ROUTE_ID, originalConfig);
     } else {
       redisRateLimiter.getConfig().remove(ROUTE_ID);
+    }
+  }
+
+  @Test
+  void directRateLimiterCallThrottlesAfterBurstCapacity() {
+    for (int i = 0; i < 5; i++) {
+      RateLimiter.Response response = redisRateLimiter.isAllowed(ROUTE_ID, "diagnostic-key").block();
+      log.info(
+          "DIAGNOSTIC direct isAllowed call {} -> allowed={} headers={}",
+          i,
+          response.isAllowed(),
+          response.getHeaders());
     }
   }
 
