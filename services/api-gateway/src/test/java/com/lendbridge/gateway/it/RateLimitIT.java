@@ -15,10 +15,10 @@ class RateLimitIT extends AbstractGatewayIntegrationTest {
   @DynamicPropertySource
   static void tightRateLimit(DynamicPropertyRegistry registry) {
     registry.add(
-        "spring.cloud.gateway.routes[0].filters[0].args.redis-rate-limiter.replenishRate",
+        "spring.cloud.gateway.routes[0].filters[0].args[redis-rate-limiter.replenishRate]",
         () -> "1");
     registry.add(
-        "spring.cloud.gateway.routes[0].filters[0].args.redis-rate-limiter.burstCapacity",
+        "spring.cloud.gateway.routes[0].filters[0].args[redis-rate-limiter.burstCapacity]",
         () -> "2");
   }
 

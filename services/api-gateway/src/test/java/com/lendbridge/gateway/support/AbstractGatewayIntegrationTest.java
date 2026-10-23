@@ -57,14 +57,17 @@ public abstract class AbstractGatewayIntegrationTest {
         "spring.cloud.gateway.routes[0].predicates[0]",
         () -> "Path=/api/v1/auth/**,/.well-known/jwks.json");
     registry.add("spring.cloud.gateway.routes[0].filters[0].name", () -> "RequestRateLimiter");
+    // Bracket notation, not dotted: the key itself contains a dot ("redis-rate-limiter.
+    // replenishRate"), and from a property-style source (unlike YAML) a plain dotted suffix
+    // after a Map<String,String> property is read as further nesting, not a literal map key.
     registry.add(
-        "spring.cloud.gateway.routes[0].filters[0].args.redis-rate-limiter.replenishRate",
+        "spring.cloud.gateway.routes[0].filters[0].args[redis-rate-limiter.replenishRate]",
         () -> "20");
     registry.add(
-        "spring.cloud.gateway.routes[0].filters[0].args.redis-rate-limiter.burstCapacity",
+        "spring.cloud.gateway.routes[0].filters[0].args[redis-rate-limiter.burstCapacity]",
         () -> "40");
     registry.add(
-        "spring.cloud.gateway.routes[0].filters[0].args.key-resolver",
+        "spring.cloud.gateway.routes[0].filters[0].args[key-resolver]",
         () -> "#{@ipKeyResolver}");
     registry.add(
         "spring.security.oauth2.resourceserver.jwt.jwk-set-uri",
