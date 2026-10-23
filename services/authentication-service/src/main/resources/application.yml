@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: authentication-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      properties:
+        schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
+
+auth:
+  jwt:
+    issuer: lendbridge-authentication-service
+    audience: lendbridge-platform
+    private-key-pem: ${AUTH_JWT_PRIVATE_KEY_PEM:}
+    public-key-pem: ${AUTH_JWT_PUBLIC_KEY_PEM:}
+  field-encryption:
+    key: ${AUTH_FIELD_ENCRYPTION_KEY}
+  phone-hash:
+    pepper: ${AUTH_PHONE_HASH_PEPPER}
+  registration:
+    email-verification-base-url: ${AUTH_EMAIL_VERIFICATION_BASE_URL:https://app.lendbridge.com/verify-email}
+  password-reset:
+    base-url: ${AUTH_PASSWORD_RESET_BASE_URL:https://app.lendbridge.com/reset-password}
+  outbox:
+    relay-interval-ms: 2000
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

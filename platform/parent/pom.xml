@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.lendbridge</groupId>
+    <artifactId>lendbridge</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>platform-parent</artifactId>
+  <packaging>pom</packaging>
+
+  <name>LendBridge Platform Parent</name>
+  <description>Shared Java 21 / plugin configuration inherited by every LendBridge module</description>
+
+  <properties>
+    <java.version>21</java.version>
+    <maven.compiler.release>21</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <!-- Keep in sync with platform/bom's versions of the same name. -->
+    <spring-boot.version>3.4.1</spring-boot.version>
+    <!-- surefire and failsafe MUST share this version (see the failsafe pluginManagement entry). -->
+    <surefire.version>3.2.5</surefire.version>
+    <avro.version>1.12.0</avro.version>
+    <mapstruct.version>1.6.3</mapstruct.version>
+    <lombok.version>1.18.36</lombok.version>
+    <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
+  </properties>
+
+  <!-- Confluent Schema Registry client / Avro serializer artifacts are not on Maven Central. -->
+  <repositories>
+    <repository>
+      <id>confluent</id>
+      <url>https://packages.confluent.io/maven/</url>
+    </repository>
+  </repositories>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <configuration>
+            <release>${maven.compiler.release}</release>
+            <parameters>true</parameters>
+            <!-- Order matters: lombok-mapstruct-binding lets MapStruct see Lombok-generated accessors. -->
+            <annotationProcessorPaths>
+              <path>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+              </path>
+              <path>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok-mapstruct-binding</artifactId>
+                <version>${lombok-mapstruct-binding.version}</version>
+              </path>
+              <path>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct-processor</artifactId>
+                <version>${mapstruct.version}</version>
+              </path>
+            </annotationProcessorPaths>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>${surefire.version}</version>
+        </plugin>
+        <plugin>
+          <!-- Pinned to the SAME version as maven-surefire-plugin above: left unpinned, failsafe
+               resolves to whatever is latest on Central and can bundle a JUnit Platform launcher
+               that is binary-incompatible with the project's JUnit Jupiter version, breaking test
+               discovery ("TestEngine with ID 'junit-jupiter' failed to discover tests"). -->
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <version>${surefire.version}</version>
+          <executions>
+            <execution>
+              <goals>
+                <goal>integration-test</goal>
+                <goal>verify</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <!-- No <executions> here: a bare pluginManagement entry only supplies version/config
+               for a plugin the child (or this parent's own build/plugins, below) already lists. -->
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+          <version>${spring-boot.version}</version>
+          <executions>
+            <execution>
+              <goals>
+                <goal>repackage</goal>
+              </goals>
+              <configuration>
+                <!-- Without a classifier, repackage REPLACES the module's main artifact with the
+                     executable fat jar (classes nested under BOOT-INF/classes/). Since repackage
+                     is bound to the package phase and failsafe's integration-test phase runs
+                     after it, failsafe would then resolve a classpath pointing at that nested
+                     layout and fail with NoClassDefFoundError/ClassNotFoundException for every
+                     main class. A classifier keeps the plain jar (with target/classes at its
+                     root) as the main artifact; the executable jar is published alongside it. -->
+                <classifier>exec</classifier>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.avro</groupId>
+          <artifactId>avro-maven-plugin</artifactId>
+          <version>${avro.version}</version>
+          <executions>
+            <execution>
+              <phase>generate-sources</phase>
+              <goals>
+                <goal>schema</goal>
+              </goals>
+              <configuration>
+                <sourceDirectory>${project.basedir}/src/main/avro</sourceDirectory>
+                <outputDirectory>${project.build.directory}/generated-sources/avro</outputDirectory>
+                <stringType>String</stringType>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>com.diffplug.spotless</groupId>
+          <artifactId>spotless-maven-plugin</artifactId>
+          <version>2.43.0</version>
+          <configuration>
+            <java>
+              <googleJavaFormat/>
+              <removeUnusedImports/>
+            </java>
+          </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <!-- Declared here (not just pluginManagement) so it is inherited and actually runs for
+           every child module's build, without each module needing to redeclare it. Modules with
+           no src/test/java/**/*IT.java simply have nothing to run. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+</project>

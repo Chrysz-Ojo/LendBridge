@@ -1,0 +1,48 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-user-role
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: user_role
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: granted_by
+                  type: uuid
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: user_role
+            baseColumnNames: user_id
+            referencedTableName: app_user
+            referencedColumnNames: id
+            constraintName: fk_user_role_user
+        - addUniqueConstraint:
+            tableName: user_role
+            columnNames: user_id, role
+            constraintName: uq_user_role_user_role
+        - createIndex:
+            tableName: user_role
+            indexName: idx_user_role_user_id
+            columns:
+              - column:
+                  name: user_id
