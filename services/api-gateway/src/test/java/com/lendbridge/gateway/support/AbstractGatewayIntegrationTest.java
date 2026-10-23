@@ -38,16 +38,34 @@ public abstract class AbstractGatewayIntegrationTest {
     authServiceStub.stop();
   }
 
+  /**
+   * Registers the whole route definition here rather than letting it merge with
+   * application.yml's: Spring Cloud Gateway's relaxed binding for {@code
+   * GatewayProperties.routes[0]} doesn't reliably merge sibling fields (e.g. {@code
+   * filters[0].name}) across different property sources — once any key under an indexed list
+   * element comes from a higher-precedence source, sibling keys from a lower one can go missing
+   * and binding fails validation. Keeping every field for routes[0] in this one dynamic property
+   * source (subclasses override just the numeric rate-limit args) avoids that entirely.
+   */
   @DynamicPropertySource
   static void registerProperties(DynamicPropertyRegistry registry) {
     registry.add("spring.data.redis.host", REDIS::getHost);
     registry.add("spring.data.redis.port", () -> REDIS.getMappedPort(6379));
-    registry.add(
-        "spring.cloud.gateway.routes[0].id", () -> "authentication-service");
+    registry.add("spring.cloud.gateway.routes[0].id", () -> "authentication-service");
     registry.add("spring.cloud.gateway.routes[0].uri", () -> authServiceStub.baseUrl());
     registry.add(
         "spring.cloud.gateway.routes[0].predicates[0]",
         () -> "Path=/api/v1/auth/**,/.well-known/jwks.json");
+    registry.add("spring.cloud.gateway.routes[0].filters[0].name", () -> "RequestRateLimiter");
+    registry.add(
+        "spring.cloud.gateway.routes[0].filters[0].args.redis-rate-limiter.replenishRate",
+        () -> "20");
+    registry.add(
+        "spring.cloud.gateway.routes[0].filters[0].args.redis-rate-limiter.burstCapacity",
+        () -> "40");
+    registry.add(
+        "spring.cloud.gateway.routes[0].filters[0].args.key-resolver",
+        () -> "#{@ipKeyResolver}");
     registry.add(
         "spring.security.oauth2.resourceserver.jwt.jwk-set-uri",
         () -> authServiceStub.jwksUrl());

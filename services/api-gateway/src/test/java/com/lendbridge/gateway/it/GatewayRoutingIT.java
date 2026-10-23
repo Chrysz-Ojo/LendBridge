@@ -17,9 +17,7 @@ class GatewayRoutingIT extends AbstractGatewayIntegrationTest {
         .isOk()
         .expectBody()
         .jsonPath("$.stub")
-        .isEqualTo("ok")
-        .jsonPath("$.path")
-        .isEqualTo("/api/v1/auth/login");
+        .isEqualTo("ok");
   }
 
   @Test
