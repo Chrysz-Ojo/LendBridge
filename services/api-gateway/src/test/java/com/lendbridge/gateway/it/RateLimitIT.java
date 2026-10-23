@@ -3,11 +3,16 @@ package com.lendbridge.gateway.it;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.lendbridge.gateway.support.AbstractGatewayIntegrationTest;
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
+import org.springframework.cloud.gateway.route.Route;
+import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -20,18 +25,28 @@ import org.springframework.http.HttpStatus;
  */
 class RateLimitIT extends AbstractGatewayIntegrationTest {
 
+  private static final Logger log = LoggerFactory.getLogger(RateLimitIT.class);
   private static final String ROUTE_ID = "authentication-service";
 
   @Autowired private RedisRateLimiter redisRateLimiter;
+  @Autowired private RouteLocator routeLocator;
 
   private RedisRateLimiter.Config originalConfig;
 
   @BeforeEach
   void tightenRateLimit() {
+    List<Route> routes = routeLocator.getRoutes().collectList().block();
+    log.info("DIAGNOSTIC registered route ids: {}", routes.stream().map(Route::getId).toList());
+
     originalConfig = redisRateLimiter.getConfig().get(ROUTE_ID);
     redisRateLimiter
         .getConfig()
         .put(ROUTE_ID, new RedisRateLimiter.Config().setReplenishRate(1).setBurstCapacity(2));
+    log.info(
+        "DIAGNOSTIC config for '{}' after override: replenishRate={} burstCapacity={}",
+        ROUTE_ID,
+        redisRateLimiter.getConfig().get(ROUTE_ID).getReplenishRate(),
+        redisRateLimiter.getConfig().get(ROUTE_ID).getBurstCapacity());
   }
 
   @AfterEach
@@ -55,6 +70,7 @@ class RateLimitIT extends AbstractGatewayIntegrationTest {
                   .exchange()
                   .returnResult(Void.class)
                   .getStatus();
+      log.info("DIAGNOSTIC request {} -> {}", i, status);
       if (status == HttpStatus.TOO_MANY_REQUESTS) {
         sawTooManyRequests = true;
       }
