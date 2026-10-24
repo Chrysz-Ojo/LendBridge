@@ -8,7 +8,9 @@ spring:
     password: local-dev-only-password
 
 auth:
-  field-encryption:
-    key: qdHFMHAAliRQNVCVXYj+X/vLknt+DKVGWmnelgYOudk=
   phone-hash:
     pepper: local-dev-only-phone-hash-pepper-do-not-use-in-prod
+
+platform:
+  field-encryption:
+    key: qdHFMHAAliRQNVCVXYj+X/vLknt+DKVGWmnelgYOudk=

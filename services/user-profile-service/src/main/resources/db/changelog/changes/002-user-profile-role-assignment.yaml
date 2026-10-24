@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-user-profile-role-assignment
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: user_profile_role_assignment
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: user_profile_role_assignment
+            columnNames: user_id, role
+            constraintName: uq_user_profile_role_user_role
+        - createIndex:
+            tableName: user_profile_role_assignment
+            indexName: idx_user_profile_role_user_id
+            columns:
+              - column:
+                  name: user_id

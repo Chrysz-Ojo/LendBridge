@@ -1,6 +1,6 @@
 package com.lendbridge.authentication.model;
 
-import com.lendbridge.authentication.repository.PhoneCiphertextConverter;
+import com.lendbridge.starter.jpa.EncryptedStringConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -30,7 +30,7 @@ public class User {
   @Column(nullable = false, unique = true)
   private String email;
 
-  @Convert(converter = PhoneCiphertextConverter.class)
+  @Convert(converter = EncryptedStringConverter.class)
   @Column(name = "phone_ciphertext", nullable = false)
   private String phone;
 

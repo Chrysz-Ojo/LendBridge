@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "ProfileUpdated",
+  "namespace": "com.lendbridge.profile.avro",
+  "doc": "Published whenever a profile's details or role set change.",
+  "fields": [
+    { "name": "userId", "type": "string" },
+    { "name": "roles", "type": { "type": "array", "items": "string" } },
+    { "name": "updatedAtEpochMillis", "type": "long" }
+  ]
+}
