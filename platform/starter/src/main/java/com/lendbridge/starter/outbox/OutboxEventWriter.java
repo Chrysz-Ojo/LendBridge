@@ -1,11 +1,8 @@
-package com.lendbridge.authentication.outbox;
+package com.lendbridge.starter.outbox;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lendbridge.starter.crypto.UuidV7;
-import com.lendbridge.authentication.model.OutboxEvent;
-import com.lendbridge.authentication.model.OutboxStatus;
-import com.lendbridge.authentication.repository.OutboxEventRepository;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

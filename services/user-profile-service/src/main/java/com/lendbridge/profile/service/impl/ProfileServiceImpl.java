@@ -8,7 +8,7 @@ import com.lendbridge.profile.model.ProfileRole;
 import com.lendbridge.profile.model.UserProfile;
 import com.lendbridge.profile.model.UserProfileRoleAssignment;
 import com.lendbridge.profile.outbox.KafkaTopics;
-import com.lendbridge.profile.outbox.OutboxEventWriter;
+import com.lendbridge.starter.outbox.OutboxEventWriter;
 import com.lendbridge.profile.outbox.ProfileUpdatedPayload;
 import com.lendbridge.profile.repository.UserProfileRepository;
 import com.lendbridge.profile.repository.UserProfileRoleAssignmentRepository;

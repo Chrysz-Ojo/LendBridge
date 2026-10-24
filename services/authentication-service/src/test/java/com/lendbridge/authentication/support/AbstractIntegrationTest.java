@@ -73,7 +73,8 @@ public abstract class AbstractIntegrationTest {
     registry.add(
         "auth.registration.email-verification-base-url", () -> "http://localhost/verify-email");
     registry.add("auth.password-reset.base-url", () -> "http://localhost/reset-password");
-    registry.add("auth.outbox.relay-interval-ms", () -> "500");
+    registry.add("platform.outbox.relay-interval-ms", () -> "500");
+    registry.add("platform.outbox.ce-source", () -> "lendbridge://authentication-service");
   }
 
   public static String schemaRegistryUrl() {

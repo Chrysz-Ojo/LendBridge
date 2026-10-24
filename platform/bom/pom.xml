@@ -34,6 +34,7 @@
          dependency (needed to issue JWTs, not just validate them) and no imported BOM manages
          its version on its own. -->
     <nimbus-jose-jwt.version>9.37.3</nimbus-jose-jwt.version>
+    <aws-sdk.version>2.56.0</aws-sdk.version>
   </properties>
 
   <dependencyManagement>
@@ -63,6 +64,15 @@
         <groupId>org.testcontainers</groupId>
         <artifactId>testcontainers-bom</artifactId>
         <version>${testcontainers.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <!-- S3-compatible object storage (document-service). Portable to real AWS S3 with zero
+             code change; talks to MinIO locally/in CI via endpoint override + path-style access. -->
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>bom</artifactId>
+        <version>${aws-sdk.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>

@@ -19,5 +19,6 @@
     <module>services/authentication-service</module>
     <module>services/api-gateway</module>
     <module>services/user-profile-service</module>
+    <module>services/document-service</module>
   </modules>
 </project>
