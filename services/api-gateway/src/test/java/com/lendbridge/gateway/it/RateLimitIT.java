@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
+import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -23,6 +24,7 @@ class RateLimitIT extends AbstractGatewayIntegrationTest {
   private static final String ROUTE_ID = "authentication-service";
 
   @Autowired private RedisRateLimiter redisRateLimiter;
+  @Autowired private ReactiveRedisConnectionFactory redisConnectionFactory;
 
   private RedisRateLimiter.Config originalConfig;
 
@@ -41,6 +43,12 @@ class RateLimitIT extends AbstractGatewayIntegrationTest {
     } else {
       redisRateLimiter.getConfig().remove(ROUTE_ID);
     }
+    // Restoring the Config above resets the *limit*, not the token count this test already
+    // drained to 0 in Redis -- without this, GatewayRoutingIT (sharing this same Testcontainers
+    // Redis and the same resolved IP key) gets 429s on its very first requests too, since the
+    // bucket has barely had time to refill. This is a disposable test-only Redis, so flushing
+    // everything is simplest and safe.
+    redisConnectionFactory.getReactiveConnection().serverCommands().flushDb().block();
   }
 
   @Test
