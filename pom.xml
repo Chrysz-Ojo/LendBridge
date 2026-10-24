@@ -17,5 +17,6 @@
     <module>platform/bom</module>
     <module>platform/starter</module>
     <module>services/authentication-service</module>
+    <module>services/api-gateway</module>
   </modules>
 </project>
