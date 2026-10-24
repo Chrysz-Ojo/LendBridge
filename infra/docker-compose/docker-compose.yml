@@ -42,5 +42,18 @@ services:
     ports:
       - "6379:6379"
 
+  minio:
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: lendbridge-local
+      MINIO_ROOT_PASSWORD: local-dev-only-password
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+
 volumes:
   postgres-data:
+  minio-data:

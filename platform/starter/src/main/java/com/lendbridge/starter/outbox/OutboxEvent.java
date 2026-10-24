@@ -1,4 +1,4 @@
-package com.lendbridge.profile.model;
+package com.lendbridge.starter.outbox;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

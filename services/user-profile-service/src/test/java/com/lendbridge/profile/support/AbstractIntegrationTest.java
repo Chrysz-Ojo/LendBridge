@@ -75,7 +75,8 @@ public abstract class AbstractIntegrationTest {
         () -> "http://" + SCHEMA_REGISTRY.getHost() + ":" + SCHEMA_REGISTRY.getMappedPort(8081));
 
     registry.add("platform.field-encryption.key", () -> FIELD_ENCRYPTION_KEY);
-    registry.add("profile.outbox.relay-interval-ms", () -> "500");
+    registry.add("platform.outbox.relay-interval-ms", () -> "500");
+    registry.add("platform.outbox.ce-source", () -> "lendbridge://user-profile-service");
   }
 
   public static String schemaRegistryUrl() {

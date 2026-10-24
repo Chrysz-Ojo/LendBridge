@@ -1,25 +1,31 @@
-package com.lendbridge.profile.outbox;
+package com.lendbridge.starter.outbox;
 
-import com.lendbridge.profile.model.OutboxEvent;
 import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.header.internals.RecordHeaders;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * Hand-rolled CloudEvents attributes carried as Kafka record headers, per the PRD's event
- * envelope convention. No CloudEvents SDK dependency is added.
+ * envelope convention. No CloudEvents SDK dependency is added. Every service supplies its own
+ * {@code ce_source} value under the same property name, the same way each supplies its own
+ * {@code platform.field-encryption.key}.
  */
-public final class CloudEventHeaders {
+@Component
+public class CloudEventHeaders {
 
-  private static final String SOURCE = "lendbridge://user-profile-service";
+  private final String source;
 
-  private CloudEventHeaders() {}
+  public CloudEventHeaders(@Value("${platform.outbox.ce-source}") String source) {
+    this.source = source;
+  }
 
-  public static RecordHeaders forEvent(OutboxEvent event) {
+  public RecordHeaders forEvent(OutboxEvent event) {
     RecordHeaders headers = new RecordHeaders();
     headers.add(new RecordHeader("ce_id", event.getId().toString().getBytes(StandardCharsets.UTF_8)));
-    headers.add(new RecordHeader("ce_source", SOURCE.getBytes(StandardCharsets.UTF_8)));
+    headers.add(new RecordHeader("ce_source", source.getBytes(StandardCharsets.UTF_8)));
     headers.add(new RecordHeader("ce_type", event.getEventType().getBytes(StandardCharsets.UTF_8)));
     headers.add(
         new RecordHeader(

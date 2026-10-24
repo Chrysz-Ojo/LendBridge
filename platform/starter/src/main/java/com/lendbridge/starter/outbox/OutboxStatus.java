@@ -1,4 +1,4 @@
-package com.lendbridge.authentication.model;
+package com.lendbridge.starter.outbox;
 
 public enum OutboxStatus {
   PENDING,
