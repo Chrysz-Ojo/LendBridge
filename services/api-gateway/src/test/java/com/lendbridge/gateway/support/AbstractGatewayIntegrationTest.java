@@ -33,25 +33,22 @@ public abstract class AbstractGatewayIntegrationTest {
   }
 
   /**
-   * Only overrides id/uri/predicates here — the route's {@code filters} (the RequestRateLimiter
-   * config) are left to merge from application.yml untouched. Mixing dynamic-property keys under
-   * {@code routes[0].filters[...]} with the YAML-defined ones was tried and reliably broke
-   * binding validation (sibling fields of the same indexed list element don't merge cleanly
-   * across different property sources). RateLimitIT tunes the rate limiter in Java instead, via
-   * {@code RedisRateLimiter}'s own per-route Config map.
+   * Overrides only the env-var placeholders application.yml already defines for exactly this
+   * purpose (${AUTH_SERVICE_URI}, ${AUTH_SERVICE_JWK_SET_URI}, ${REDIS_HOST}, ${REDIS_PORT}) —
+   * never routes[0].* paths directly. Overriding routes[0].id/uri/predicates directly (tried
+   * first) silently drops the route's filters: the doubly-nested routes[0].filters[0].* never
+   * binds from application.yml once anything else under routes[0] comes from a dynamic property
+   * source, with no error — confirmed by logging Route.getFilters() and seeing []. Placeholder
+   * substitution happens at the Environment level before GatewayProperties binding even starts,
+   * so application.yml stays the sole, uncontested source for the whole route (filters included)
+   * and only the ${...} values change.
    */
   @DynamicPropertySource
   static void registerProperties(DynamicPropertyRegistry registry) {
-    registry.add("spring.data.redis.host", REDIS::getHost);
-    registry.add("spring.data.redis.port", () -> REDIS.getMappedPort(6379));
-    registry.add("spring.cloud.gateway.routes[0].id", () -> "authentication-service");
-    registry.add("spring.cloud.gateway.routes[0].uri", () -> authServiceStub.baseUrl());
-    registry.add(
-        "spring.cloud.gateway.routes[0].predicates[0]",
-        () -> "Path=/api/v1/auth/**,/.well-known/jwks.json");
-    registry.add(
-        "spring.security.oauth2.resourceserver.jwt.jwk-set-uri",
-        () -> authServiceStub.jwksUrl());
+    registry.add("REDIS_HOST", REDIS::getHost);
+    registry.add("REDIS_PORT", () -> REDIS.getMappedPort(6379));
+    registry.add("AUTH_SERVICE_URI", () -> authServiceStub.baseUrl());
+    registry.add("AUTH_SERVICE_JWK_SET_URI", () -> authServiceStub.jwksUrl());
   }
 
   @org.springframework.beans.factory.annotation.Autowired protected WebTestClient webTestClient;
