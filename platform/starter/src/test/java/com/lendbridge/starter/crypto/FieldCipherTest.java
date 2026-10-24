@@ -1,4 +1,4 @@
-package com.lendbridge.authentication.crypto;
+package com.lendbridge.starter.crypto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

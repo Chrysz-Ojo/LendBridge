@@ -66,7 +66,7 @@ public abstract class AbstractIntegrationTest {
         "spring.kafka.producer.properties.schema.registry.url",
         () -> "http://" + SCHEMA_REGISTRY.getHost() + ":" + SCHEMA_REGISTRY.getMappedPort(8081));
 
-    registry.add("auth.field-encryption.key", () -> FIELD_ENCRYPTION_KEY);
+    registry.add("platform.field-encryption.key", () -> FIELD_ENCRYPTION_KEY);
     registry.add("auth.phone-hash.pepper", () -> "test-phone-hash-pepper");
     registry.add("auth.jwt.private-key-pem", () -> "");
     registry.add("auth.jwt.public-key-pem", () -> "");

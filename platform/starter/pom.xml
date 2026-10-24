@@ -44,6 +44,14 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <!-- API-only (annotations/interfaces), not the full JPA/Hibernate runtime, so
+           EncryptedStringConverter can be referenced without forcing every consumer of this
+           starter onto JPA. Version comes from the imported spring-boot-dependencies BOM. -->
+      <groupId>jakarta.persistence</groupId>
+      <artifactId>jakarta.persistence-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>

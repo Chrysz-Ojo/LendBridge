@@ -10,7 +10,7 @@ import com.lendbridge.authentication.model.MfaStatus;
 import com.lendbridge.authentication.crypto.TotpAlgorithm;
 import com.lendbridge.authentication.repository.MfaEnrollmentRepository;
 import com.lendbridge.authentication.crypto.Base32;
-import com.lendbridge.authentication.crypto.FieldCipher;
+import com.lendbridge.starter.crypto.FieldCipher;
 import com.lendbridge.starter.crypto.UuidV7;
 import com.lendbridge.starter.exception.BadRequestException;
 import com.lendbridge.starter.exception.NotFoundException;

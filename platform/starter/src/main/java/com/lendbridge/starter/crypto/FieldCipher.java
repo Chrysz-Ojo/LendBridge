@@ -1,4 +1,4 @@
-package com.lendbridge.authentication.crypto;
+package com.lendbridge.starter.crypto;
 
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
@@ -10,9 +10,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
- * AES-256-GCM field-level encryption for PII at rest (e.g. phone numbers). A fresh random 12-byte
- * IV is generated per encryption and prepended to the ciphertext before base64 encoding, so the
- * same plaintext never produces the same output twice.
+ * AES-256-GCM field-level encryption for PII at rest. A fresh random 12-byte IV is generated per
+ * encryption and prepended to the ciphertext before base64 encoding, so the same plaintext never
+ * produces the same output twice. Every service supplies its own key under the same property
+ * name — keys are never shared across services, limiting the blast radius of a single
+ * compromised database.
  *
  * <p>Known v1 gap (ADR 0002): the key comes from an environment variable, not a real KMS/Vault.
  */
@@ -26,11 +28,11 @@ public class FieldCipher {
   private final SecretKeySpec key;
   private final SecureRandom secureRandom = new SecureRandom();
 
-  public FieldCipher(@Value("${auth.field-encryption.key}") String base64Key) {
+  public FieldCipher(@Value("${platform.field-encryption.key}") String base64Key) {
     byte[] keyBytes = Base64.getDecoder().decode(base64Key);
     if (keyBytes.length != 32) {
       throw new IllegalStateException(
-          "auth.field-encryption.key must decode to exactly 32 bytes (AES-256), got "
+          "platform.field-encryption.key must decode to exactly 32 bytes (AES-256), got "
               + keyBytes.length);
     }
     this.key = new SecretKeySpec(keyBytes, "AES");
