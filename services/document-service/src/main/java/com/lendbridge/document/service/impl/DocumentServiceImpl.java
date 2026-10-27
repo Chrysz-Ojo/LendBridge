@@ -51,7 +51,9 @@ public class DocumentServiceImpl implements DocumentService {
     validate(file);
 
     byte[] content = readBytes(file);
-    ScanResult scanResult = virusScanner.scan(content);
+    if (virusScanner.scan(content) != ScanResult.CLEAN) {
+      throw new BadRequestException("FILE_INFECTED", "File failed virus scan and was rejected");
+    }
 
     UUID id = UuidV7.generate();
     String objectKey = buildObjectKey(ownerId, id, file.getOriginalFilename());
@@ -68,7 +70,7 @@ public class DocumentServiceImpl implements DocumentService {
             .sizeBytes(file.getSize())
             .checksumSha256(sha256Hex(content))
             .objectKey(objectKey)
-            .scanStatus(scanResult == ScanResult.CLEAN ? ScanStatus.CLEAN : ScanStatus.INFECTED)
+            .scanStatus(ScanStatus.CLEAN)
             .createdAt(now)
             .build();
     documentRepository.save(document);

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -66,6 +67,19 @@ class DocumentServiceImplTest {
 
     assertThatThrownBy(() -> service.uploadDocument(ownerId, new UploadDocumentRequest(DocumentType.OTHER), file))
         .isInstanceOf(BadRequestException.class);
+  }
+
+  @Test
+  void uploadDocument_rejectsInfectedFile() {
+    when(virusScanner.scan(any())).thenReturn(ScanResult.INFECTED);
+    MockMultipartFile file = new MockMultipartFile("file", "id.png", "image/png", new byte[] {1, 2, 3});
+
+    assertThatThrownBy(() -> service.uploadDocument(ownerId, new UploadDocumentRequest(DocumentType.OTHER), file))
+        .isInstanceOf(BadRequestException.class);
+
+    verify(objectStore, never()).put(anyString(), any(), anyString());
+    verify(documentRepository, never()).save(any());
+    verify(outboxEventWriter, never()).write(any(), any(), any(), any());
   }
 
   @Test
