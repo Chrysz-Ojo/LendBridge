@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-virtual-account
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: virtual_account
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: wallet_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: bank_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: account_number
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: provider_reference
+                  type: varchar(255)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: virtual_account
+            indexName: idx_virtual_account_wallet_id
+            columns:
+              - column:
+                  name: wallet_id

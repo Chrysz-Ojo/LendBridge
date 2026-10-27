@@ -1,0 +1,12 @@
+# Local-development-only defaults. Never use these values outside a developer's own machine;
+# production configuration must come entirely from environment variables (CLAUDE.md "no secrets
+# in code").
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/wallet_db
+    username: wallet_service
+    password: local-dev-only-password
+
+platform:
+  field-encryption:
+    key: 0j53/iCFZ0TDgEIob0XirFbrHxHbk6BFqMqZfKwgvD0=

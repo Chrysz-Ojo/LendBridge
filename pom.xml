@@ -21,5 +21,6 @@
     <module>services/user-profile-service</module>
     <module>services/document-service</module>
     <module>services/ledger-service</module>
+    <module>services/wallet-service</module>
   </modules>
 </project>

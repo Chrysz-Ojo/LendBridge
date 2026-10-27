@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "name": "WalletHoldCreated",
+  "namespace": "com.lendbridge.wallet.avro",
+  "doc": "Published when funds are reserved (held) against a wallet.",
+  "fields": [
+    { "name": "holdId", "type": "string" },
+    { "name": "walletId", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "amountKobo", "type": "long" },
+    { "name": "reference", "type": ["null", "string"], "default": null },
+    { "name": "createdAtEpochMillis", "type": "long" }
+  ]
+}
