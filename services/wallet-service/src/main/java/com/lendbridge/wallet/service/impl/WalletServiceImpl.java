@@ -42,6 +42,7 @@ public class WalletServiceImpl implements WalletService {
     long heldTotal = holdRepository.sumActiveHoldsByWalletId(wallet.getId());
     return WalletResponse.builder()
         .id(wallet.getId())
+        .ledgerAccountId(wallet.getLedgerAccountId())
         .currency(wallet.getCurrency())
         .ledgerBalanceKobo(snapshot.getBalanceKobo())
         .heldKobo(heldTotal)

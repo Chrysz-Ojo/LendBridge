@@ -1,0 +1,57 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-webhook-log
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: webhook_log
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: provider
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: provider_event_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: raw_body
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: headers_json
+                  type: text
+              - column:
+                  name: signature_valid
+                  type: boolean
+                  constraints:
+                    nullable: false
+              - column:
+                  name: processed
+                  type: boolean
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payment_intent_id
+                  type: uuid
+              - column:
+                  name: payout_id
+                  type: uuid
+              - column:
+                  name: received_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: webhook_log
+            columnNames: provider_event_id
+            constraintName: uq_webhook_log_provider_event_id

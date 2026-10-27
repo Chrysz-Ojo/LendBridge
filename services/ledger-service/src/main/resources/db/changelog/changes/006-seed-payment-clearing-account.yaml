@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-seed-payment-clearing-account
+      author: lendbridge
+      comment: >
+        One global, well-known clearing account for payment-service's Kafka consumer to post
+        against (DEBIT-normal: money flows through it on the way in from a top-up, and out on a
+        payout). Seeded here rather than lazily provisioned at runtime — unlike wallet-service's
+        per-user accounts, this consumer calls JournalEntryService as a local in-process bean,
+        not over HTTP, so there is no caller-JWT problem to solve and no provisioning race to
+        guard against (ADR 0013); a fixed migration-seeded row is simply the simplest correct
+        answer. The literal UUID here must match
+        com.lendbridge.ledger.ClearingAccounts.PAYMENT_CLEARING_NGN exactly.
+      changes:
+        - insert:
+            tableName: account
+            columns:
+              - column:
+                  name: id
+                  value: a30150c7-0cc2-4b48-a1c0-c8a8abd8e831
+              - column:
+                  name: account_type
+                  value: PAYMENT_CLEARING
+              - column:
+                  name: currency
+                  value: NGN
+              - column:
+                  name: normal_balance
+                  value: DEBIT
+              - column:
+                  name: owner_reference
+                  value: platform:payment-clearing
+              - column:
+                  name: created_at
+                  valueDate: 2026-01-01T00:00:00Z

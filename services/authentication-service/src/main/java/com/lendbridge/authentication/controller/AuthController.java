@@ -27,6 +27,7 @@ import com.lendbridge.authentication.service.RegistrationService;
 import com.lendbridge.authentication.security.CurrentUser;
 import com.lendbridge.authentication.security.JwtKeyProvider;
 import com.lendbridge.starter.exception.NotFoundException;
+import com.lendbridge.starter.exception.UnauthorizedException;
 import com.lendbridge.starter.dto.ApiResponse;
 import com.lendbridge.starter.dto.MessageResponse;
 import com.lendbridge.authentication.dto.UserResponse;
@@ -139,6 +140,20 @@ public class AuthController {
       @Valid @RequestBody TotpVerifyRequest request, Authentication authentication) {
     totpService.verifyAndActivate(CurrentUser.idFrom(authentication), request);
     return ResponseEntity.ok(ApiResponse.success(MessageResponse.of("TOTP MFA activated")));
+  }
+
+  /** Step-up check for an already-logged-in, already-MFA-enrolled user (e.g. before a withdrawal)
+   * — distinct from {@link #verifyTotp}, which only activates a PENDING enrollment. Thin wrapper
+   * over {@code TotpService.verifyActive}, which already existed for the login-MFA-challenge flow
+   * but had no endpoint of its own. */
+  @PostMapping("/api/v1/auth/mfa/totp/step-up-verify")
+  public ResponseEntity<ApiResponse<MessageResponse>> stepUpVerifyTotp(
+      @Valid @RequestBody TotpVerifyRequest request, Authentication authentication) {
+    boolean valid = totpService.verifyActive(CurrentUser.idFrom(authentication), request.getCode());
+    if (!valid) {
+      throw new UnauthorizedException("TOTP_CODE_INVALID", "Invalid or expired code");
+    }
+    return ResponseEntity.ok(ApiResponse.success(MessageResponse.of("Step-up verification succeeded")));
   }
 
   @PostMapping("/api/v1/auth/mfa/sms/challenge")

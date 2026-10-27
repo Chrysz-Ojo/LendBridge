@@ -20,6 +20,7 @@ import com.lendbridge.ledger.repository.JournalEntryRepository;
 import com.lendbridge.ledger.repository.PostingRepository;
 import com.lendbridge.starter.exception.NotFoundException;
 import com.lendbridge.starter.exception.UnprocessableEntityException;
+import com.lendbridge.starter.idempotency.IdempotencyOperations;
 import com.lendbridge.starter.outbox.OutboxEventWriter;
 import java.time.Instant;
 import java.util.List;
@@ -55,7 +56,8 @@ class JournalEntryServiceImplTest {
             accountRepository,
             journalEntryMapper,
             postingMapper,
-            outboxEventWriter);
+            outboxEventWriter,
+            new IdempotencyOperations());
   }
 
   @Test

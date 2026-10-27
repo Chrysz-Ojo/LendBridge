@@ -2,16 +2,19 @@ package com.lendbridge.wallet.controller;
 
 import com.lendbridge.starter.dto.ApiResponse;
 import com.lendbridge.wallet.dto.AddBankAccountRequest;
+import com.lendbridge.wallet.dto.BankAccountPayoutDetailsResponse;
 import com.lendbridge.wallet.dto.BankAccountResponse;
 import com.lendbridge.wallet.security.CurrentUser;
 import com.lendbridge.wallet.service.BankAccountService;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,6 +40,17 @@ public class BankAccountController {
       Authentication authentication) {
     List<BankAccountResponse> response =
         bankAccountService.listBankAccounts(CurrentUser.idFrom(authentication));
+    return ResponseEntity.ok(ApiResponse.success(response));
+  }
+
+  /** Decrypted account number — for payout construction (payment-service), never for display.
+   * Scoped to the resource owner's own forwarded JWT like every other endpoint here; the caller
+   * already knows their own account number, having supplied it themselves. */
+  @GetMapping("/{id}")
+  public ResponseEntity<ApiResponse<BankAccountPayoutDetailsResponse>> getBankAccountForPayout(
+      Authentication authentication, @PathVariable UUID id) {
+    BankAccountPayoutDetailsResponse response =
+        bankAccountService.getBankAccountForPayout(CurrentUser.idFrom(authentication), id);
     return ResponseEntity.ok(ApiResponse.success(response));
   }
 }

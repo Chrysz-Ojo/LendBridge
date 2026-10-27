@@ -1,0 +1,15 @@
+{
+  "type": "record",
+  "name": "PaymentSucceeded",
+  "namespace": "com.lendbridge.payment.avro",
+  "doc": "Published when a top-up or payout completes successfully at the provider.",
+  "fields": [
+    { "name": "paymentReferenceId", "type": "string" },
+    { "name": "purpose", "type": "string" },
+    { "name": "walletLedgerAccountId", "type": "string" },
+    { "name": "amountKobo", "type": "long" },
+    { "name": "currency", "type": "string" },
+    { "name": "idempotencyKey", "type": "string" },
+    { "name": "occurredAtEpochMillis", "type": "long" }
+  ]
+}

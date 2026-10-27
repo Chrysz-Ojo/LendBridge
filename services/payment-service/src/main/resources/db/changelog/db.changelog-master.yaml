@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changes/001-payment-intent.yaml
+  - include:
+      file: db/changelog/changes/002-provider-transaction.yaml
+  - include:
+      file: db/changelog/changes/003-payout.yaml
+  - include:
+      file: db/changelog/changes/004-webhook-log.yaml
+  - include:
+      file: db/changelog/changes/005-reconciliation-run.yaml
+  - include:
+      file: db/changelog/changes/006-payment-mandate.yaml
+  - include:
+      file: db/changelog/changes/007-outbox-event.yaml
