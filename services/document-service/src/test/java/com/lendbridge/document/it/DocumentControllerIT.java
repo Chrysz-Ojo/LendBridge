@@ -69,6 +69,26 @@ class DocumentControllerIT extends AbstractIntegrationTest {
   }
 
   @Test
+  void upload_rejectsInfectedFile() throws Exception {
+    UUID userId = UUID.randomUUID();
+    byte[] eicar =
+        "X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*"
+            .getBytes(java.nio.charset.StandardCharsets.ISO_8859_1);
+    MockMultipartFile file = new MockMultipartFile("file", "eicar.png", "image/png", eicar);
+
+    mockMvc
+        .perform(
+            multipart("/api/v1/documents")
+                .file(file)
+                .param("documentType", "OTHER")
+                .with(jwt().jwt(j -> j.subject(userId.toString()))))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.errorCode", equalTo("FILE_INFECTED")));
+
+    assertThat(documentRepository.findAllByOwnerId(userId)).isEmpty();
+  }
+
+  @Test
   void getDocument_returns404_forAnotherUsersDocument() throws Exception {
     UUID owner = UUID.randomUUID();
     UUID intruder = UUID.randomUUID();
