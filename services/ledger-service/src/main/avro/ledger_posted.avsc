@@ -1,0 +1,30 @@
+{
+  "type": "record",
+  "name": "LedgerPosted",
+  "namespace": "com.lendbridge.ledger.avro",
+  "doc": "Published whenever a journal entry is posted to the ledger.",
+  "fields": [
+    { "name": "journalEntryId", "type": "string" },
+    { "name": "idempotencyKey", "type": "string" },
+    { "name": "currency", "type": "string" },
+    { "name": "reference", "type": ["null", "string"], "default": null },
+    { "name": "correlationId", "type": ["null", "string"], "default": null },
+    { "name": "postedAtEpochMillis", "type": "long" },
+    {
+      "name": "postings",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "LedgerPosting",
+          "fields": [
+            { "name": "postingId", "type": "string" },
+            { "name": "accountId", "type": "string" },
+            { "name": "direction", "type": "string" },
+            { "name": "amountKobo", "type": "long" }
+          ]
+        }
+      }
+    }
+  ]
+}

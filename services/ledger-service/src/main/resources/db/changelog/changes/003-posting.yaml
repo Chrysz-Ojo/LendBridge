@@ -1,0 +1,53 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-posting
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: posting
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: journal_entry_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: account_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: direction
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount_kobo
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: posting
+            indexName: idx_posting_account_id_id
+            columns:
+              - column:
+                  name: account_id
+              - column:
+                  name: id
+        - createIndex:
+            tableName: posting
+            indexName: idx_posting_journal_entry_id
+            columns:
+              - column:
+                  name: journal_entry_id

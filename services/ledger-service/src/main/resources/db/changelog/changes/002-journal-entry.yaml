@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-journal-entry
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: journal_entry
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: idempotency_key
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: varchar(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reference
+                  type: varchar(255)
+              - column:
+                  name: description
+                  type: varchar(500)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: journal_entry
+            columnNames: idempotency_key
+            constraintName: uq_journal_entry_idempotency_key

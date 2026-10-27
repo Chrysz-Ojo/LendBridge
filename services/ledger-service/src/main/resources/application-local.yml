@@ -1,0 +1,12 @@
+# Local-development-only defaults. Never use these values outside a developer's own machine;
+# production configuration must come entirely from environment variables (CLAUDE.md "no secrets
+# in code").
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ledger_db
+    username: ledger_service
+    password: local-dev-only-password
+
+platform:
+  field-encryption:
+    key: NvisajmBDygh6FdlT44jIez5j1/jJczcZ6tuLJb88CM=
