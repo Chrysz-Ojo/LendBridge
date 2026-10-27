@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.ServerSideEncryption;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
@@ -53,7 +54,12 @@ public class S3ObjectStore implements ObjectStore {
   @Override
   public void put(String key, byte[] content, String contentType) {
     s3Client.putObject(
-        PutObjectRequest.builder().bucket(bucket).key(key).contentType(contentType).build(),
+        PutObjectRequest.builder()
+            .bucket(bucket)
+            .key(key)
+            .contentType(contentType)
+            .serverSideEncryption(ServerSideEncryption.AES256)
+            .build(),
         RequestBody.fromBytes(content));
   }
 
