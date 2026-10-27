@@ -19,7 +19,7 @@ import com.lendbridge.starter.exception.ConflictException;
 import com.lendbridge.starter.exception.NotFoundException;
 import com.lendbridge.authentication.notification.EmailSender;
 import com.lendbridge.authentication.outbox.KafkaTopics;
-import com.lendbridge.authentication.outbox.OutboxEventWriter;
+import com.lendbridge.starter.outbox.OutboxEventWriter;
 import com.lendbridge.authentication.outbox.UserRegisteredPayload;
 import com.lendbridge.authentication.model.Email;
 import com.lendbridge.authentication.model.Password;

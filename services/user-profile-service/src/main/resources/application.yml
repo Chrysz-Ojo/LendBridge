@@ -42,10 +42,9 @@ spring:
 platform:
   field-encryption:
     key: ${PROFILE_FIELD_ENCRYPTION_KEY}
-
-profile:
   outbox:
     relay-interval-ms: 2000
+    ce-source: lendbridge://user-profile-service
 
 springdoc:
   api-docs:

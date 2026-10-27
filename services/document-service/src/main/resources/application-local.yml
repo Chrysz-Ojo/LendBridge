@@ -1,0 +1,18 @@
+# Local-development-only defaults. Never use these values outside a developer's own machine;
+# production configuration must come entirely from environment variables (CLAUDE.md "no secrets
+# in code").
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/document_db
+    username: document_service
+    password: local-dev-only-password
+
+platform:
+  field-encryption:
+    key: QyED5Q7JTVQNW7ZyzkkqnOJgkHo+BWhRqNNYofw+H04=
+
+documents:
+  storage:
+    # LocalStack ignores credential values entirely; "test"/"test" is just the AWS CLI convention.
+    access-key: test
+    secret-key: test

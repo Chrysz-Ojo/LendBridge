@@ -1,0 +1,58 @@
+server:
+  port: ${SERVER_PORT:8083}
+
+spring:
+  application:
+    name: document-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  servlet:
+    multipart:
+      max-file-size: 11MB
+      max-request-size: 11MB
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      properties:
+        schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8085}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_SERVICE_JWK_SET_URI:http://localhost:8081/.well-known/jwks.json}
+
+platform:
+  field-encryption:
+    key: ${DOCUMENT_FIELD_ENCRYPTION_KEY}
+  outbox:
+    relay-interval-ms: 2000
+    ce-source: lendbridge://document-service
+
+documents:
+  storage:
+    endpoint: ${DOCUMENTS_STORAGE_ENDPOINT:http://localhost:4566}
+    region: ${DOCUMENTS_STORAGE_REGION:us-east-1}
+    bucket: ${DOCUMENTS_STORAGE_BUCKET:lendbridge-documents}
+    access-key: ${DOCUMENTS_STORAGE_ACCESS_KEY}
+    secret-key: ${DOCUMENTS_STORAGE_SECRET_KEY}
+    path-style-access: ${DOCUMENTS_STORAGE_PATH_STYLE_ACCESS:true}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

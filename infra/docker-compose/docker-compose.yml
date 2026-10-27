@@ -42,5 +42,15 @@ services:
     ports:
       - "6379:6379"
 
+  localstack:
+    image: localstack/localstack:4.0
+    environment:
+      SERVICES: s3
+    ports:
+      - "4566:4566"
+    volumes:
+      - localstack-data:/var/lib/localstack
+
 volumes:
   postgres-data:
+  localstack-data:

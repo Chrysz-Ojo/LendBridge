@@ -1,6 +1,5 @@
-package com.lendbridge.authentication.repository;
+package com.lendbridge.starter.outbox;
 
-import com.lendbridge.authentication.model.OutboxEvent;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "DocumentUploaded",
+  "namespace": "com.lendbridge.document.avro",
+  "doc": "Published whenever a document finishes uploading and is stored.",
+  "fields": [
+    { "name": "documentId", "type": "string" },
+    { "name": "ownerId", "type": "string" },
+    { "name": "documentType", "type": "string" },
+    { "name": "uploadedAtEpochMillis", "type": "long" }
+  ]
+}
