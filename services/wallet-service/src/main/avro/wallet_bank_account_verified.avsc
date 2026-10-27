@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "WalletBankAccountVerified",
+  "namespace": "com.lendbridge.wallet.avro",
+  "doc": "Published when a bank account passes verification and becomes withdrawal-eligible.",
+  "fields": [
+    { "name": "bankAccountId", "type": "string" },
+    { "name": "walletId", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "verifiedAtEpochMillis", "type": "long" }
+  ]
+}

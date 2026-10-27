@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "WalletCreated",
+  "namespace": "com.lendbridge.wallet.avro",
+  "doc": "Published when a wallet is auto-provisioned for a newly registered user.",
+  "fields": [
+    { "name": "walletId", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "currency", "type": "string" },
+    { "name": "createdAtEpochMillis", "type": "long" }
+  ]
+}

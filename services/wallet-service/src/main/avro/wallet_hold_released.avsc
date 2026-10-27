@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "name": "WalletHoldReleased",
+  "namespace": "com.lendbridge.wallet.avro",
+  "doc": "Published when a previously reserved hold is released without converting to a ledger debit.",
+  "fields": [
+    { "name": "holdId", "type": "string" },
+    { "name": "walletId", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "amountKobo", "type": "long" },
+    { "name": "reference", "type": ["null", "string"], "default": null },
+    { "name": "releasedAtEpochMillis", "type": "long" }
+  ]
+}
