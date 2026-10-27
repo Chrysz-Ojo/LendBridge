@@ -3,10 +3,11 @@ package com.lendbridge.payment.provider.impl.flutterwave;
 import feign.RequestInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 
-@Configuration
+/** Deliberately NOT {@code @Configuration} — see {@code PaystackFeignConfig}'s javadoc for why:
+ * only referenced via {@code @FeignClient(configuration = FlutterwaveFeignConfig.class)}, never
+ * component-scanned as a global interceptor. */
 public class FlutterwaveFeignConfig {
 
   @Bean
