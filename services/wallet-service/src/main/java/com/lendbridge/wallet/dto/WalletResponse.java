@@ -15,6 +15,7 @@ import lombok.Setter;
 @Builder
 public class WalletResponse {
   private UUID id;
+  private UUID ledgerAccountId;
   private String currency;
   private long ledgerBalanceKobo;
   private long heldKobo;

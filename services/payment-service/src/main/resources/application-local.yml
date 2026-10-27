@@ -1,0 +1,17 @@
+# Local-development-only defaults. Never use these values outside a developer's own machine;
+# production configuration must come entirely from environment variables (CLAUDE.md "no secrets
+# in code").
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/payment_db
+    username: payment_service
+    password: local-dev-only-password
+
+platform:
+  field-encryption:
+    key: UbzeS3g3Iz6uXHcb4FL/xqk5YyrUBzjTWohHlmVJhrA=
+
+payment:
+  provider:
+    primary: fake
+    secondary: fake

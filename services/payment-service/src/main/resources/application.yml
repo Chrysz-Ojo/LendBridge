@@ -1,0 +1,104 @@
+server:
+  port: ${SERVER_PORT:8092}
+
+spring:
+  application:
+    name: payment-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      properties:
+        schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8085}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_SERVICE_JWK_SET_URI:http://localhost:8081/.well-known/jwks.json}
+
+platform:
+  field-encryption:
+    key: ${PAYMENT_FIELD_ENCRYPTION_KEY}
+  outbox:
+    relay-interval-ms: 2000
+    ce-source: lendbridge://payment-service
+
+payment:
+  provider:
+    primary: ${PAYMENT_PROVIDER_PRIMARY:fake}
+    secondary: ${PAYMENT_PROVIDER_SECONDARY:fake}
+  withdrawal:
+    daily-limit-kobo: ${PAYMENT_WITHDRAWAL_DAILY_LIMIT_KOBO:50000000}
+
+paystack:
+  secret-key: ${PAYSTACK_SECRET_KEY:}
+  base-url: ${PAYSTACK_BASE_URL:https://api.paystack.co}
+
+flutterwave:
+  secret-key: ${FLUTTERWAVE_SECRET_KEY:}
+  verif-hash: ${FLUTTERWAVE_VERIF_HASH:}
+  base-url: ${FLUTTERWAVE_BASE_URL:https://api.flutterwave.com/v3}
+
+monnify:
+  api-key: ${MONNIFY_API_KEY:}
+  client-secret: ${MONNIFY_CLIENT_SECRET:}
+  contract-code: ${MONNIFY_CONTRACT_CODE:}
+  base-url: ${MONNIFY_BASE_URL:https://sandbox.monnify.com}
+
+wallet-service:
+  url: ${WALLET_SERVICE_URL:http://localhost:8091}
+
+authentication-service:
+  url: ${AUTH_SERVICE_URL:http://localhost:8081}
+
+feign:
+  client:
+    config:
+      wallet-service:
+        connect-timeout: 300
+        read-timeout: 1000
+      authentication-service:
+        connect-timeout: 300
+        read-timeout: 1000
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      paymentProviderPrimary:
+        sliding-window-size: 20
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 15s
+        permitted-number-of-calls-in-half-open-state: 5
+        minimum-number-of-calls: 5
+      paymentProviderPayout:
+        sliding-window-size: 20
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 15s
+        permitted-number-of-calls-in-half-open-state: 5
+        minimum-number-of-calls: 5
+  retry:
+    instances:
+      paymentProviderPrimary:
+        max-attempts: 2
+        wait-duration: 100ms
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

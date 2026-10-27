@@ -1,0 +1,91 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-payment-intent
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: payment_intent
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: wallet_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: wallet_ledger_account_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: purpose
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: repayment_method
+                  type: varchar(16)
+              - column:
+                  name: loan_id
+                  type: uuid
+              - column:
+                  name: amount_kobo
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: varchar(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: provider
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: provider_reference
+                  type: varchar(255)
+              - column:
+                  name: checkout_url
+                  type: varchar(1024)
+              - column:
+                  name: idempotency_key
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: payment_intent
+            columnNames: idempotency_key
+            constraintName: uq_payment_intent_idempotency_key
+        - createIndex:
+            tableName: payment_intent
+            indexName: idx_payment_intent_user_id
+            columns:
+              - column:
+                  name: user_id

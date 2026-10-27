@@ -98,6 +98,52 @@ class MfaIT extends AbstractIntegrationTest {
     assertThat(tokens.getAccessToken()).isNotBlank();
   }
 
+  @Test
+  void stepUpVerify_succeedsWithValidActiveCode_andRejectsWrongCode() throws Exception {
+    String email = "stepup." + UUID.randomUUID() + "@example.com";
+    String phone = "+234" + (800_000_0000L + Math.abs(UUID.randomUUID().getMostSignificantBits() % 100_000_000L));
+    createActiveUser(email, phone, "Str0ng!Passw0rd");
+    String accessToken = loginAndGetAccessToken(email, "Str0ng!Passw0rd");
+
+    String enrollBody =
+        mockMvc
+            .perform(
+                post("/api/v1/auth/mfa/totp/enroll")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    TotpEnrollResponse enrollResponse =
+        objectMapper
+            .readValue(enrollBody, new TypeReference<ApiResponse<TotpEnrollResponse>>() {})
+            .getData();
+    mockMvc
+        .perform(
+            post("/api/v1/auth/mfa/totp/verify")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("code", currentTotpCode(enrollResponse.getSecret())))))
+        .andExpect(status().isOk());
+
+    // Now ACTIVE (not PENDING) — step-up-verify must still accept a fresh code.
+    mockMvc
+        .perform(
+            post("/api/v1/auth/mfa/totp/step-up-verify")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("code", currentTotpCode(enrollResponse.getSecret())))))
+        .andExpect(status().isOk());
+
+    mockMvc
+        .perform(
+            post("/api/v1/auth/mfa/totp/step-up-verify")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("code", "000000"))))
+        .andExpect(status().isUnauthorized());
+  }
+
   private String currentTotpCode(String base32Secret) {
     byte[] secretBytes = Base32.decode(base32Secret);
     return TotpAlgorithm.generateAtTime(

@@ -1,0 +1,57 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-payment-mandate
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: payment_mandate
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: wallet_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: loan_id
+                  type: uuid
+              - column:
+                  name: provider
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: provider_mandate_reference
+                  type: varchar(255)
+              - column:
+                  name: status
+                  type: varchar(24)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: authorization_url
+                  type: varchar(1024)
+              - column:
+                  name: token_expires_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: activated_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: revoked_at
+                  type: TIMESTAMP WITH TIME ZONE

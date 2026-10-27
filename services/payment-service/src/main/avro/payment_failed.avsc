@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "PaymentFailed",
+  "namespace": "com.lendbridge.payment.avro",
+  "doc": "Published when a top-up or payout fails at the provider.",
+  "fields": [
+    { "name": "paymentReferenceId", "type": "string" },
+    { "name": "purpose", "type": "string" },
+    { "name": "reason", "type": ["null", "string"], "default": null },
+    { "name": "occurredAtEpochMillis", "type": "long" }
+  ]
+}

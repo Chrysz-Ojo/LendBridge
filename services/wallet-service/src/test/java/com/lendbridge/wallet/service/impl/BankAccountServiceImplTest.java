@@ -112,4 +112,55 @@ class BankAccountServiceImplTest {
     assertThat(service.listBankAccounts(userId)).isEmpty();
     verify(walletService, never()).getOrCreateWallet(any());
   }
+
+  @Test
+  void getBankAccountForPayout_returnsDecryptedAccountNumber() {
+    BankAccount account =
+        BankAccount.builder()
+            .id(UUID.randomUUID())
+            .walletId(wallet.getId())
+            .bankCode("058")
+            .bankName("GTBank")
+            .accountNumber("0123456789")
+            .accountHolderName("Jane Doe")
+            .verificationStatus(BankVerificationStatus.VERIFIED)
+            .createdAt(Instant.now())
+            .build();
+    when(walletService.findWallet(userId)).thenReturn(java.util.Optional.of(wallet));
+    when(bankAccountRepository.findById(account.getId())).thenReturn(java.util.Optional.of(account));
+
+    com.lendbridge.wallet.dto.BankAccountPayoutDetailsResponse response =
+        service.getBankAccountForPayout(userId, account.getId());
+
+    assertThat(response.getAccountNumber()).isEqualTo("0123456789");
+    assertThat(response.getVerificationStatus()).isEqualTo(BankVerificationStatus.VERIFIED);
+  }
+
+  @Test
+  void getBankAccountForPayout_throwsNotFound_whenAccountBelongsToAnotherWallet() {
+    Wallet otherWallet =
+        Wallet.builder()
+            .id(UUID.randomUUID())
+            .userId(UUID.randomUUID())
+            .currency("NGN")
+            .ledgerAccountId(UUID.randomUUID())
+            .createdAt(Instant.now())
+            .updatedAt(Instant.now())
+            .build();
+    BankAccount account =
+        BankAccount.builder()
+            .id(UUID.randomUUID())
+            .walletId(otherWallet.getId())
+            .bankCode("058")
+            .accountNumber("0123456789")
+            .accountHolderName("Someone Else")
+            .verificationStatus(BankVerificationStatus.VERIFIED)
+            .createdAt(Instant.now())
+            .build();
+    when(walletService.findWallet(userId)).thenReturn(java.util.Optional.of(wallet));
+    when(bankAccountRepository.findById(account.getId())).thenReturn(java.util.Optional.of(account));
+
+    assertThatThrownBy(() -> service.getBankAccountForPayout(userId, account.getId()))
+        .isInstanceOf(com.lendbridge.starter.exception.NotFoundException.class);
+  }
 }

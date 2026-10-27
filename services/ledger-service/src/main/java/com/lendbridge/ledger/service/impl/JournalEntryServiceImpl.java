@@ -18,15 +18,14 @@ import com.lendbridge.ledger.service.JournalEntryService;
 import com.lendbridge.starter.crypto.UuidV7;
 import com.lendbridge.starter.exception.NotFoundException;
 import com.lendbridge.starter.exception.UnprocessableEntityException;
+import com.lendbridge.starter.idempotency.IdempotencyOperations;
 import com.lendbridge.starter.outbox.OutboxEventWriter;
 import com.lendbridge.starter.web.CorrelationIdFilter;
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,15 +39,17 @@ public class JournalEntryServiceImpl implements JournalEntryService {
   private final JournalEntryMapper journalEntryMapper;
   private final PostingMapper postingMapper;
   private final OutboxEventWriter outboxEventWriter;
+  private final IdempotencyOperations idempotencyOperations;
 
   @Override
   @Transactional
   public JournalEntryResponse postJournalEntry(PostJournalEntryRequest request, String idempotencyKey) {
-    Optional<JournalEntry> existing = journalEntryRepository.findByIdempotencyKey(idempotencyKey);
-    if (existing.isPresent()) {
-      return toResponse(existing.get());
-    }
+    return idempotencyOperations.runIdempotently(
+        () -> journalEntryRepository.findByIdempotencyKey(idempotencyKey).map(this::toResponse),
+        () -> createJournalEntry(request, idempotencyKey));
+  }
 
+  private JournalEntryResponse createJournalEntry(PostJournalEntryRequest request, String idempotencyKey) {
     List<UUID> accountIds = request.getPostings().stream().map(PostingRequest::getAccountId).distinct().toList();
     List<Account> accounts = accountRepository.findAllById(accountIds);
     if (accounts.size() != accountIds.size()) {
@@ -95,17 +96,8 @@ public class JournalEntryServiceImpl implements JournalEntryService {
                         .build())
             .toList();
 
-    try {
-      journalEntryRepository.save(journalEntry);
-      postingRepository.saveAll(postings);
-    } catch (DataIntegrityViolationException e) {
-      // Lost the idempotency-key race to a concurrent request with the same key; replay its
-      // result instead of propagating a constraint-violation error.
-      return journalEntryRepository
-          .findByIdempotencyKey(idempotencyKey)
-          .map(this::toResponse)
-          .orElseThrow(() -> e);
-    }
+    journalEntryRepository.save(journalEntry);
+    postingRepository.saveAll(postings);
 
     String correlationId = MDC.get(CorrelationIdFilter.MDC_KEY);
     outboxEventWriter.write(

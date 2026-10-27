@@ -3,6 +3,7 @@ package com.lendbridge.wallet.service.impl;
 import com.lendbridge.starter.crypto.UuidV7;
 import com.lendbridge.starter.exception.NotFoundException;
 import com.lendbridge.starter.exception.UnprocessableEntityException;
+import com.lendbridge.starter.idempotency.IdempotencyOperations;
 import com.lendbridge.starter.outbox.OutboxEventWriter;
 import com.lendbridge.wallet.dto.CreateHoldRequest;
 import com.lendbridge.wallet.dto.HoldResponse;
@@ -20,10 +21,8 @@ import com.lendbridge.wallet.service.HoldService;
 import com.lendbridge.wallet.service.WalletService;
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,15 +35,17 @@ public class HoldServiceImpl implements HoldService {
   private final LedgerGateway ledgerGateway;
   private final OutboxEventWriter outboxEventWriter;
   private final HoldMapper holdMapper;
+  private final IdempotencyOperations idempotencyOperations;
 
   @Override
   @Transactional
   public HoldResponse createHold(UUID userId, CreateHoldRequest request, String idempotencyKey) {
-    Optional<Hold> existing = holdRepository.findByIdempotencyKey(idempotencyKey);
-    if (existing.isPresent()) {
-      return holdMapper.toResponse(existing.get());
-    }
+    return idempotencyOperations.runIdempotently(
+        () -> holdRepository.findByIdempotencyKey(idempotencyKey).map(holdMapper::toResponse),
+        () -> createHoldRecord(userId, request, idempotencyKey));
+  }
 
+  private HoldResponse createHoldRecord(UUID userId, CreateHoldRequest request, String idempotencyKey) {
     Wallet wallet = walletService.getOrCreateWallet(userId);
     LedgerBalanceSnapshot snapshot = ledgerGateway.getBalance(wallet.getLedgerAccountId());
     long heldTotal = holdRepository.sumActiveHoldsByWalletId(wallet.getId());
@@ -66,14 +67,7 @@ public class HoldServiceImpl implements HoldService {
             .createdAt(now)
             .build();
 
-    try {
-      holdRepository.save(hold);
-    } catch (DataIntegrityViolationException e) {
-      return holdRepository
-          .findByIdempotencyKey(idempotencyKey)
-          .map(holdMapper::toResponse)
-          .orElseThrow(() -> e);
-    }
+    holdRepository.save(hold);
 
     outboxEventWriter.write(
         "Hold",

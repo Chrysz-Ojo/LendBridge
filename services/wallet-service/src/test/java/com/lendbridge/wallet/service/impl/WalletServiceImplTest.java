@@ -99,6 +99,7 @@ class WalletServiceImplTest {
 
     WalletResponse response = service.getWalletSummary(userId);
 
+    assertThat(response.getLedgerAccountId()).isEqualTo(wallet.getLedgerAccountId());
     assertThat(response.getLedgerBalanceKobo()).isEqualTo(10_000L);
     assertThat(response.getHeldKobo()).isEqualTo(3_000L);
     assertThat(response.getAvailableKobo()).isEqualTo(7_000L);

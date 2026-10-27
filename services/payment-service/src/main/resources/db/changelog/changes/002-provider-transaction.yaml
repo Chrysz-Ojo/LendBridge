@@ -1,0 +1,77 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-provider-transaction
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: provider_transaction
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: payment_intent_id
+                  type: uuid
+              - column:
+                  name: payout_id
+                  type: uuid
+              - column:
+                  name: purpose
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: provider
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: provider_reference
+                  type: varchar(255)
+              - column:
+                  name: idempotency_key
+                  type: varchar(255)
+              - column:
+                  name: raw_request_json
+                  type: text
+              - column:
+                  name: raw_response_json
+                  type: text
+              - column:
+                  name: status
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reconciliation_run_id
+                  type: uuid
+              - column:
+                  name: match_status
+                  type: varchar(16)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: provider_transaction
+            indexName: idx_provider_transaction_payment_intent_id
+            columns:
+              - column:
+                  name: payment_intent_id
+        - createIndex:
+            tableName: provider_transaction
+            indexName: idx_provider_transaction_payout_id
+            columns:
+              - column:
+                  name: payout_id
+        - createIndex:
+            tableName: provider_transaction
+            indexName: idx_provider_transaction_idempotency_key
+            unique: true
+            columns:
+              - column:
+                  name: idempotency_key

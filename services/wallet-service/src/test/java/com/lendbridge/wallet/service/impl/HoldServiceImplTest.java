@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.lendbridge.starter.exception.UnprocessableEntityException;
+import com.lendbridge.starter.idempotency.IdempotencyOperations;
 import com.lendbridge.starter.outbox.OutboxEventWriter;
 import com.lendbridge.wallet.dto.CreateHoldRequest;
 import com.lendbridge.wallet.dto.HoldResponse;
@@ -47,7 +48,12 @@ class HoldServiceImplTest {
     holdMapper = Mappers.getMapper(HoldMapper.class);
     service =
         new HoldServiceImpl(
-            holdRepository, walletService, ledgerGateway, outboxEventWriter, holdMapper);
+            holdRepository,
+            walletService,
+            ledgerGateway,
+            outboxEventWriter,
+            holdMapper,
+            new IdempotencyOperations());
     userId = UUID.randomUUID();
     wallet =
         Wallet.builder()

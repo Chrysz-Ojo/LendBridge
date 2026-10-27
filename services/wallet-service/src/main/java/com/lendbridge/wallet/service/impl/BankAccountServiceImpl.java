@@ -2,8 +2,10 @@ package com.lendbridge.wallet.service.impl;
 
 import com.lendbridge.starter.crypto.UuidV7;
 import com.lendbridge.starter.exception.ConflictException;
+import com.lendbridge.starter.exception.NotFoundException;
 import com.lendbridge.starter.outbox.OutboxEventWriter;
 import com.lendbridge.wallet.dto.AddBankAccountRequest;
+import com.lendbridge.wallet.dto.BankAccountPayoutDetailsResponse;
 import com.lendbridge.wallet.dto.BankAccountResponse;
 import com.lendbridge.wallet.model.BankAccount;
 import com.lendbridge.wallet.model.BankVerificationStatus;
@@ -98,6 +100,28 @@ public class BankAccountServiceImpl implements BankAccountService {
                     .map(this::toResponse)
                     .toList())
         .orElseGet(List::of);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public BankAccountPayoutDetailsResponse getBankAccountForPayout(UUID userId, UUID bankAccountId) {
+    Wallet wallet =
+        walletService
+            .findWallet(userId)
+            .orElseThrow(() -> new NotFoundException("BANK_ACCOUNT_NOT_FOUND", "Bank account not found"));
+    BankAccount bankAccount =
+        bankAccountRepository
+            .findById(bankAccountId)
+            .filter(a -> a.getWalletId().equals(wallet.getId()))
+            .orElseThrow(() -> new NotFoundException("BANK_ACCOUNT_NOT_FOUND", "Bank account not found"));
+    return BankAccountPayoutDetailsResponse.builder()
+        .id(bankAccount.getId())
+        .bankCode(bankAccount.getBankCode())
+        .bankName(bankAccount.getBankName())
+        .accountNumber(bankAccount.getAccountNumber())
+        .accountHolderName(bankAccount.getAccountHolderName())
+        .verificationStatus(bankAccount.getVerificationStatus())
+        .build();
   }
 
   private BankAccountResponse toResponse(BankAccount bankAccount) {
