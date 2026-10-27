@@ -36,6 +36,8 @@ spring:
           jwk-set-uri: ${AUTH_SERVICE_JWK_SET_URI:http://localhost:8081/.well-known/jwks.json}
 
 platform:
+  field-encryption:
+    key: ${DOCUMENT_FIELD_ENCRYPTION_KEY}
   outbox:
     relay-interval-ms: 2000
     ce-source: lendbridge://document-service

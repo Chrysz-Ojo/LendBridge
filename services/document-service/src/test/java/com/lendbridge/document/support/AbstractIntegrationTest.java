@@ -1,5 +1,8 @@
 package com.lendbridge.document.support;
 
+import java.security.SecureRandom;
+import java.util.Base64;
+
 import com.lendbridge.document.repository.DocumentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -28,6 +31,7 @@ public abstract class AbstractIntegrationTest {
 
   private static final Network NETWORK = Network.newNetwork();
   private static final String BUCKET = "test-documents";
+  private static final String FIELD_ENCRYPTION_KEY = randomBase64Key();
 
   static final PostgreSQLContainer<?> POSTGRES =
       new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"))
@@ -71,6 +75,7 @@ public abstract class AbstractIntegrationTest {
         "spring.kafka.producer.properties.schema.registry.url",
         () -> "http://" + SCHEMA_REGISTRY.getHost() + ":" + SCHEMA_REGISTRY.getMappedPort(8081));
 
+    registry.add("platform.field-encryption.key", () -> FIELD_ENCRYPTION_KEY);
     registry.add("platform.outbox.relay-interval-ms", () -> "500");
     registry.add("platform.outbox.ce-source", () -> "lendbridge://document-service");
 
@@ -81,6 +86,12 @@ public abstract class AbstractIntegrationTest {
     registry.add("documents.storage.access-key", LOCALSTACK::getAccessKey);
     registry.add("documents.storage.secret-key", LOCALSTACK::getSecretKey);
     registry.add("documents.storage.path-style-access", () -> "true");
+  }
+
+  private static String randomBase64Key() {
+    byte[] key = new byte[32];
+    new SecureRandom().nextBytes(key);
+    return Base64.getEncoder().encodeToString(key);
   }
 
   @Autowired protected MockMvc mockMvc;

@@ -7,6 +7,10 @@ spring:
     username: document_service
     password: local-dev-only-password
 
+platform:
+  field-encryption:
+    key: QyED5Q7JTVQNW7ZyzkkqnOJgkHo+BWhRqNNYofw+H04=
+
 documents:
   storage:
     # LocalStack ignores credential values entirely; "test"/"test" is just the AWS CLI convention.
