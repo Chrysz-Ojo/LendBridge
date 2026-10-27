@@ -41,13 +41,16 @@ public class BankAccountServiceImpl implements BankAccountService {
     // constraint on the ciphertext can never catch a duplicate plaintext number — compare after
     // decryption instead (JPA decrypts transparently on read via EncryptedStringConverter).
     boolean duplicate =
-        existing.stream().anyMatch(account -> account.getAccountNumber().equals(request.getAccountNumber()));
+        existing.stream()
+            .anyMatch(account -> account.getAccountNumber().equals(request.getAccountNumber()));
     if (duplicate) {
-      throw new ConflictException("BANK_ACCOUNT_ALREADY_ADDED", "This bank account has already been added");
+      throw new ConflictException(
+          "BANK_ACCOUNT_ALREADY_ADDED", "This bank account has already been added");
     }
 
     BankAccountVerificationResult verification =
-        verificationProvider.verify(request.getAccountNumber(), request.getBankCode(), request.getAccountHolderName());
+        verificationProvider.verify(
+            request.getAccountNumber(), request.getBankCode(), request.getAccountHolderName());
 
     Instant now = Instant.now();
     BankAccount bankAccount =
@@ -58,7 +61,10 @@ public class BankAccountServiceImpl implements BankAccountService {
             .bankName(request.getBankName())
             .accountNumber(request.getAccountNumber())
             .accountHolderName(request.getAccountHolderName())
-            .verificationStatus(verification.isVerified() ? BankVerificationStatus.VERIFIED : BankVerificationStatus.REJECTED)
+            .verificationStatus(
+                verification.isVerified()
+                    ? BankVerificationStatus.VERIFIED
+                    : BankVerificationStatus.REJECTED)
             .verifiedAt(verification.isVerified() ? now : null)
             .createdAt(now)
             .build();
@@ -70,7 +76,10 @@ public class BankAccountServiceImpl implements BankAccountService {
           bankAccount.getId().toString(),
           KafkaTopics.WALLET_BANK_ACCOUNT_VERIFIED,
           new WalletBankAccountVerifiedPayload(
-              bankAccount.getId().toString(), wallet.getId().toString(), userId.toString(), now.toEpochMilli()));
+              bankAccount.getId().toString(),
+              wallet.getId().toString(),
+              userId.toString(),
+              now.toEpochMilli()));
     }
 
     return toResponse(bankAccount);
@@ -79,8 +88,16 @@ public class BankAccountServiceImpl implements BankAccountService {
   @Override
   @Transactional(readOnly = true)
   public List<BankAccountResponse> listBankAccounts(UUID userId) {
-    Wallet wallet = walletService.getOrCreateWallet(userId);
-    return bankAccountRepository.findAllByWalletId(wallet.getId()).stream().map(this::toResponse).toList();
+    // findWallet, not getOrCreateWallet: read-only transaction, and no wallet row yet just means
+    // no bank accounts exist yet.
+    return walletService
+        .findWallet(userId)
+        .map(
+            wallet ->
+                bankAccountRepository.findAllByWalletId(wallet.getId()).stream()
+                    .map(this::toResponse)
+                    .toList())
+        .orElseGet(List::of);
   }
 
   private BankAccountResponse toResponse(BankAccount bankAccount) {
@@ -100,6 +117,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     if (accountNumber.length() <= 4) {
       return "****";
     }
-    return "*".repeat(accountNumber.length() - 4) + accountNumber.substring(accountNumber.length() - 4);
+    return "*".repeat(accountNumber.length() - 4)
+        + accountNumber.substring(accountNumber.length() - 4);
   }
 }

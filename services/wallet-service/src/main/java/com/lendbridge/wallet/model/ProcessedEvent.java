@@ -11,8 +11,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Tracks Kafka event ids already handled, so a consumer redelivery (at-least-once) doesn't
- * re-apply the same event — CLAUDE.md: "consumers must be idempotent". */
+/**
+ * Tracks Kafka event ids already handled, so a consumer redelivery (at-least-once) doesn't re-apply
+ * the same event — CLAUDE.md: "consumers must be idempotent".
+ */
 @Entity
 @Table(name = "processed_event")
 @Getter

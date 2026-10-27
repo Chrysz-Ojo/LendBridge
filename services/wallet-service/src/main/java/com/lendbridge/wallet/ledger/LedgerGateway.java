@@ -15,10 +15,9 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 /**
- * The only thing the rest of wallet-service calls to reach ledger-service. Resilience4j
- * annotations live here, not on {@link LedgerClient} directly — Feign clients are
- * Spring-generated proxies, and wrapping the call in an explicit service method avoids
- * proxy-on-proxy ambiguity.
+ * The only thing the rest of wallet-service calls to reach ledger-service. Resilience4j annotations
+ * live here, not on {@link LedgerClient} directly — Feign clients are Spring-generated proxies, and
+ * wrapping the call in an explicit service method avoids proxy-on-proxy ambiguity.
  */
 @Service
 public class LedgerGateway {
@@ -42,8 +41,10 @@ public class LedgerGateway {
     this.cacheTtl = Duration.ofSeconds(cacheTtlSeconds);
   }
 
-  /** Runs once per wallet (lazy provisioning), not a hot path — no circuit breaker; a failure
-   * here is surfaced directly rather than retried/broken-circuited. */
+  /**
+   * Runs once per wallet (lazy provisioning), not a hot path — no circuit breaker; a failure here
+   * is surfaced directly rather than retried/broken-circuited.
+   */
   public LedgerAccountResponse openAccount(OpenLedgerAccountRequest request) {
     try {
       return ledgerClient.openAccount(request).getData();
@@ -58,12 +59,14 @@ public class LedgerGateway {
   public LedgerBalanceSnapshot getBalance(UUID ledgerAccountId) {
     LedgerBalanceResponse response = ledgerClient.getBalance(ledgerAccountId).getData();
     writeCache(ledgerAccountId, response.getBalanceKobo(), response.getCurrency());
-    return new LedgerBalanceSnapshot(response.getBalanceKobo(), response.getCurrency(), false, null);
+    return new LedgerBalanceSnapshot(
+        response.getBalanceKobo(), response.getCurrency(), false, null);
   }
 
   @SuppressWarnings("unused") // invoked reflectively by Resilience4j as getBalance's fallback
   private LedgerBalanceSnapshot getBalanceFallback(UUID ledgerAccountId, Throwable cause) {
-    log.warn("Ledger balance read failed for account {}, falling back to cache", ledgerAccountId, cause);
+    log.warn(
+        "Ledger balance read failed for account {}, falling back to cache", ledgerAccountId, cause);
     CachedLedgerBalance cached = readCache(ledgerAccountId);
     if (cached == null) {
       throw new DependencyUnavailableException(
@@ -82,7 +85,10 @@ public class LedgerGateway {
           new CachedLedgerBalance(balanceKobo, currency, Instant.now().toEpochMilli());
       redisTemplate
           .opsForValue()
-          .set(CACHE_KEY_PREFIX + ledgerAccountId, objectMapper.writeValueAsString(cached), cacheTtl);
+          .set(
+              CACHE_KEY_PREFIX + ledgerAccountId,
+              objectMapper.writeValueAsString(cached),
+              cacheTtl);
     } catch (JsonProcessingException e) {
       log.warn("Failed to serialize ledger balance cache entry for {}", ledgerAccountId, e);
     }

@@ -1,12 +1,11 @@
 package com.lendbridge.wallet.support;
 
-import java.security.SecureRandom;
-import java.util.Base64;
-
 import com.lendbridge.wallet.repository.BankAccountRepository;
 import com.lendbridge.wallet.repository.HoldRepository;
 import com.lendbridge.wallet.repository.VirtualAccountRepository;
 import com.lendbridge.wallet.repository.WalletRepository;
+import java.security.SecureRandom;
+import java.util.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,13 +19,13 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /**
- * Shared Testcontainers fixture: Postgres + Kafka + Schema Registry + Redis, all started
- * manually in a {@code static} block rather than via {@code @Testcontainers}/{@code @Container},
- * which would stop them in {@code afterAll()} of whichever IT class runs first even though the
- * fields are static — manual start keeps one singleton set of containers alive for the whole
- * suite. ledger-service itself is stubbed ({@link LedgerServiceStub}), not run as a container —
- * wallet-service never depends on ledger-service's own database or Kafka topics, only its REST
- * API, so a lightweight in-process stub is the right boundary for this IT, same reasoning as
+ * Shared Testcontainers fixture: Postgres + Kafka + Schema Registry + Redis, all started manually
+ * in a {@code static} block rather than via {@code @Testcontainers}/{@code @Container}, which would
+ * stop them in {@code afterAll()} of whichever IT class runs first even though the fields are
+ * static — manual start keeps one singleton set of containers alive for the whole suite.
+ * ledger-service itself is stubbed ({@link LedgerServiceStub}), not run as a container —
+ * wallet-service never depends on ledger-service's own database or Kafka topics, only its REST API,
+ * so a lightweight in-process stub is the right boundary for this IT, same reasoning as
  * api-gateway's {@code AuthServiceStub} for authentication-service.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)

@@ -42,7 +42,9 @@ class BankAccountServiceImplTest {
   @BeforeEach
   void setUp() {
     verificationProvider = new FakeBankAccountVerificationProvider();
-    service = new BankAccountServiceImpl(bankAccountRepository, walletService, verificationProvider, outboxEventWriter);
+    service =
+        new BankAccountServiceImpl(
+            bankAccountRepository, walletService, verificationProvider, outboxEventWriter);
     userId = UUID.randomUUID();
     wallet =
         Wallet.builder()
@@ -53,13 +55,14 @@ class BankAccountServiceImplTest {
             .createdAt(Instant.now())
             .updatedAt(Instant.now())
             .build();
-    when(walletService.getOrCreateWallet(userId)).thenReturn(wallet);
   }
 
   @Test
   void addBankAccount_verifiedAccount_publishesEvent() {
+    when(walletService.getOrCreateWallet(userId)).thenReturn(wallet);
     when(bankAccountRepository.findAllByWalletId(wallet.getId())).thenReturn(List.of());
-    AddBankAccountRequest request = new AddBankAccountRequest("058", "GTBank", "0123456789", "Jane Doe");
+    AddBankAccountRequest request =
+        new AddBankAccountRequest("058", "GTBank", "0123456789", "Jane Doe");
 
     BankAccountResponse response = service.addBankAccount(userId, request);
 
@@ -70,8 +73,10 @@ class BankAccountServiceImplTest {
 
   @Test
   void addBankAccount_denyListedAccount_rejectedWithoutEvent() {
+    when(walletService.getOrCreateWallet(userId)).thenReturn(wallet);
     when(bankAccountRepository.findAllByWalletId(wallet.getId())).thenReturn(List.of());
-    AddBankAccountRequest request = new AddBankAccountRequest("058", "GTBank", "0000000001", "Jane Doe");
+    AddBankAccountRequest request =
+        new AddBankAccountRequest("058", "GTBank", "0000000001", "Jane Doe");
 
     BankAccountResponse response = service.addBankAccount(userId, request);
 
@@ -81,6 +86,7 @@ class BankAccountServiceImplTest {
 
   @Test
   void addBankAccount_rejectsDuplicateAccountNumberForSameWallet() {
+    when(walletService.getOrCreateWallet(userId)).thenReturn(wallet);
     BankAccount existing =
         BankAccount.builder()
             .id(UUID.randomUUID())
@@ -92,8 +98,18 @@ class BankAccountServiceImplTest {
             .createdAt(Instant.now())
             .build();
     when(bankAccountRepository.findAllByWalletId(wallet.getId())).thenReturn(List.of(existing));
-    AddBankAccountRequest request = new AddBankAccountRequest("058", "GTBank", "0123456789", "Jane Doe");
+    AddBankAccountRequest request =
+        new AddBankAccountRequest("058", "GTBank", "0123456789", "Jane Doe");
 
-    assertThatThrownBy(() -> service.addBankAccount(userId, request)).isInstanceOf(ConflictException.class);
+    assertThatThrownBy(() -> service.addBankAccount(userId, request))
+        .isInstanceOf(ConflictException.class);
+  }
+
+  @Test
+  void listBankAccounts_returnsEmpty_whenWalletNotYetProvisioned() {
+    when(walletService.findWallet(userId)).thenReturn(java.util.Optional.empty());
+
+    assertThat(service.listBankAccounts(userId)).isEmpty();
+    verify(walletService, never()).getOrCreateWallet(any());
   }
 }

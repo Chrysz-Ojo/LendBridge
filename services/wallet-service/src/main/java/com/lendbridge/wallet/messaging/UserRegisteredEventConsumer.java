@@ -23,11 +23,11 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Auto-provisions a {@link Wallet} row (currency only — no ledger account yet) for every newly
  * registered user; PRD E10-S1: "each user has a wallet," universal, no opt-in. The ledger account
- * is deliberately NOT opened here — there is no service-to-service auth mechanism anywhere in
- * this repo, so a Kafka consumer has no inbound caller JWT to forward to ledger-service; it's
+ * is deliberately NOT opened here — there is no service-to-service auth mechanism anywhere in this
+ * repo, so a Kafka consumer has no inbound caller JWT to forward to ledger-service; it's
  * provisioned lazily on first authenticated access instead (see {@code
- * WalletServiceImpl.getOrCreateWallet}). Idempotent against redelivery via {@code
- * processed_event}, same pattern as user-profile-service's own consumer of this same topic.
+ * WalletServiceImpl.getOrCreateWallet}). Idempotent against redelivery via {@code processed_event},
+ * same pattern as user-profile-service's own consumer of this same topic.
  */
 @Component
 @RequiredArgsConstructor
@@ -45,7 +45,8 @@ public class UserRegisteredEventConsumer {
   public void onUserRegistered(
       ConsumerRecord<String, UserRegistered> record,
       @Header(name = "ce_id", required = false) byte[] ceIdHeader) {
-    String eventId = ceIdHeader != null ? new String(ceIdHeader) : record.topic() + "-" + record.offset();
+    String eventId =
+        ceIdHeader != null ? new String(ceIdHeader) : record.topic() + "-" + record.offset();
     if (processedEventRepository.existsById(eventId)) {
       log.info("Skipping already-processed user.registered event {}", eventId);
       return;
@@ -70,7 +71,8 @@ public class UserRegisteredEventConsumer {
           "Wallet",
           walletId.toString(),
           KafkaTopics.WALLET_CREATED,
-          new WalletCreatedPayload(walletId.toString(), userId.toString(), CURRENCY, now.toEpochMilli()));
+          new WalletCreatedPayload(
+              walletId.toString(), userId.toString(), CURRENCY, now.toEpochMilli()));
     }
 
     processedEventRepository.save(

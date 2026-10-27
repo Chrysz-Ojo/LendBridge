@@ -93,7 +93,12 @@ public class HoldServiceImpl implements HoldService {
   @Override
   @Transactional
   public void releaseHold(UUID userId, UUID holdId) {
-    Wallet wallet = walletService.getOrCreateWallet(userId);
+    // A hold can't exist without its wallet already having been provisioned, so a plain lookup
+    // (no lock, no side effect) is enough here — releasing isn't a provisioning trigger.
+    Wallet wallet =
+        walletService
+            .findWallet(userId)
+            .orElseThrow(() -> new NotFoundException("HOLD_NOT_FOUND", "Hold not found"));
     Hold hold =
         holdRepository
             .findById(holdId)
@@ -125,8 +130,16 @@ public class HoldServiceImpl implements HoldService {
   @Override
   @Transactional(readOnly = true)
   public List<HoldResponse> listActiveHolds(UUID userId) {
-    Wallet wallet = walletService.getOrCreateWallet(userId);
-    return holdMapper.toResponseList(
-        holdRepository.findAllByWalletIdAndStatusOrderByCreatedAtDesc(wallet.getId(), HoldStatus.ACTIVE));
+    // findWallet, not getOrCreateWallet: this is a read-only transaction, and getOrCreateWallet's
+    // row lock would be rejected by Postgres under one. No wallet row yet also just means no
+    // holds exist yet, not an error.
+    return walletService
+        .findWallet(userId)
+        .map(
+            wallet ->
+                holdMapper.toResponseList(
+                    holdRepository.findAllByWalletIdAndStatusOrderByCreatedAtDesc(
+                        wallet.getId(), HoldStatus.ACTIVE)))
+        .orElseGet(List::of);
   }
 }

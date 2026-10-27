@@ -15,6 +15,7 @@ public interface HoldRepository extends JpaRepository<Hold, UUID> {
 
   List<Hold> findAllByWalletIdAndStatusOrderByCreatedAtDesc(UUID walletId, HoldStatus status);
 
-  @Query("select coalesce(sum(h.amountKobo), 0) from Hold h where h.walletId = :walletId and h.status = 'ACTIVE'")
+  @Query(
+      "select coalesce(sum(h.amountKobo), 0) from Hold h where h.walletId = :walletId and h.status = 'ACTIVE'")
   long sumActiveHoldsByWalletId(@Param("walletId") UUID walletId);
 }

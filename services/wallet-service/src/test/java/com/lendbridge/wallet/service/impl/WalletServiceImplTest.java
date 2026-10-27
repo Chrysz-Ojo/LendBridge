@@ -37,7 +37,8 @@ class WalletServiceImplTest {
 
   @BeforeEach
   void setUp() {
-    service = new WalletServiceImpl(walletRepository, holdRepository, ledgerGateway, outboxEventWriter);
+    service =
+        new WalletServiceImpl(walletRepository, holdRepository, ledgerGateway, outboxEventWriter);
     userId = UUID.randomUUID();
   }
 
@@ -47,7 +48,9 @@ class WalletServiceImplTest {
     when(walletRepository.findByUserIdForUpdate(userId)).thenReturn(Optional.of(wallet));
     UUID ledgerAccountId = UUID.randomUUID();
     when(ledgerGateway.openAccount(any()))
-        .thenReturn(new LedgerAccountResponse(ledgerAccountId, "WALLET", "NGN", "CREDIT", userId.toString()));
+        .thenReturn(
+            new LedgerAccountResponse(
+                ledgerAccountId, "WALLET", "NGN", "CREDIT", userId.toString()));
 
     Wallet result = service.getOrCreateWallet(userId);
 
@@ -73,7 +76,9 @@ class WalletServiceImplTest {
     when(walletRepository.findByUserIdForUpdate(userId)).thenReturn(Optional.empty());
     UUID ledgerAccountId = UUID.randomUUID();
     when(ledgerGateway.openAccount(any()))
-        .thenReturn(new LedgerAccountResponse(ledgerAccountId, "WALLET", "NGN", "CREDIT", userId.toString()));
+        .thenReturn(
+            new LedgerAccountResponse(
+                ledgerAccountId, "WALLET", "NGN", "CREDIT", userId.toString()));
 
     Wallet result = service.getOrCreateWallet(userId);
 

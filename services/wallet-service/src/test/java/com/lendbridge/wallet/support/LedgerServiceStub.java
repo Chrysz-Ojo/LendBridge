@@ -6,7 +6,6 @@ import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -16,16 +15,17 @@ import java.util.regex.Pattern;
 /**
  * A minimal stand-in for ledger-service's {@code POST /accounts} and {@code GET
  * /accounts/{id}/balance}, built on the JDK's own {@code com.sun.net.httpserver.HttpServer} (zero
- * extra dependency) rather than reactor-netty (api-gateway's {@code AuthServiceStub} uses that,
- * but only because api-gateway is already a WebFlux app; wallet-service is plain blocking Spring
- * MVC and doesn't have reactor-netty on its classpath). Every opened account defaults to a
- * generous balance so most tests don't need to think about it; call {@link
- * #setBalance(UUID, long)} for tests that specifically exercise insufficient-funds behavior.
+ * extra dependency) rather than reactor-netty (api-gateway's {@code AuthServiceStub} uses that, but
+ * only because api-gateway is already a WebFlux app; wallet-service is plain blocking Spring MVC
+ * and doesn't have reactor-netty on its classpath). Every opened account defaults to a generous
+ * balance so most tests don't need to think about it; call {@link #setBalance(UUID, long)} for
+ * tests that specifically exercise insufficient-funds behavior.
  */
 public final class LedgerServiceStub {
 
   private static final long DEFAULT_BALANCE_KOBO = 1_000_000_00L;
-  private static final Pattern BALANCE_PATH = Pattern.compile("^/api/v1/ledger/accounts/([^/]+)/balance$");
+  private static final Pattern BALANCE_PATH =
+      Pattern.compile("^/api/v1/ledger/accounts/([^/]+)/balance$");
 
   private final HttpServer server;
   private final ObjectMapper objectMapper = new ObjectMapper();

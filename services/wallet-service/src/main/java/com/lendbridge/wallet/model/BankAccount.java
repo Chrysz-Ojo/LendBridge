@@ -20,9 +20,9 @@ import lombok.Setter;
  * {@code accountNumber} is encrypted at rest (AES-GCM via {@link EncryptedStringConverter}), so
  * duplicate-account detection cannot be a database unique constraint on the ciphertext column —
  * {@code FieldCipher} uses a fresh random IV per encryption, so the same plaintext number never
- * produces the same ciphertext twice. Uniqueness per wallet is instead enforced in
- * {@code BankAccountServiceImpl} by decrypting and comparing against the wallet's existing
- * accounts before insert.
+ * produces the same ciphertext twice. Uniqueness per wallet is instead enforced in {@code
+ * BankAccountServiceImpl} by decrypting and comparing against the wallet's existing accounts before
+ * insert.
  */
 @Entity
 @Table(name = "bank_account")

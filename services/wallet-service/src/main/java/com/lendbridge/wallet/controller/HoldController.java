@@ -35,7 +35,8 @@ public class HoldController {
       @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
       @Valid @RequestBody CreateHoldRequest request) {
     if (idempotencyKey == null || idempotencyKey.isBlank()) {
-      throw new BadRequestException("IDEMPOTENCY_KEY_REQUIRED", "Idempotency-Key header is required");
+      throw new BadRequestException(
+          "IDEMPOTENCY_KEY_REQUIRED", "Idempotency-Key header is required");
     }
     HoldResponse response =
         holdService.createHold(CurrentUser.idFrom(authentication), request, idempotencyKey);
@@ -43,7 +44,8 @@ public class HoldController {
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<ApiResponse<Void>> releaseHold(Authentication authentication, @PathVariable UUID id) {
+  public ResponseEntity<ApiResponse<Void>> releaseHold(
+      Authentication authentication, @PathVariable UUID id) {
     holdService.releaseHold(CurrentUser.idFrom(authentication), id);
     return ResponseEntity.ok(ApiResponse.success(null));
   }

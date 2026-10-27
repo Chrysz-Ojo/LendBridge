@@ -12,8 +12,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Pure storage — Payment Service (not yet built) owns actually provisioning this with a PSP;
- * wallet-service only records what it's told. */
+/**
+ * Pure storage — Payment Service (not yet built) owns actually provisioning this with a PSP;
+ * wallet-service only records what it's told.
+ */
 @Entity
 @Table(name = "virtual_account")
 @Getter

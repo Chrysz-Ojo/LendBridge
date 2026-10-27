@@ -6,8 +6,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** {@code stale=true} means this came from the Redis cache because Ledger was unreachable, not
- * from a live read. */
+/**
+ * {@code stale=true} means this came from the Redis cache because Ledger was unreachable, not from
+ * a live read.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

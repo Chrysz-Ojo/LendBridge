@@ -5,8 +5,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** JSON shape stored in the outbox row; mirrors the fields of the wallet_hold_released.avsc
- * schema. */
+/**
+ * JSON shape stored in the outbox row; mirrors the fields of the wallet_hold_released.avsc schema.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

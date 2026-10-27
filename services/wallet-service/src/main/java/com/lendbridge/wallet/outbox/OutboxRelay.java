@@ -39,12 +39,14 @@ public class OutboxRelay extends AbstractOutboxRelay {
       case KafkaTopics.WALLET_HOLD_CREATED -> publishHoldCreated(event);
       case KafkaTopics.WALLET_HOLD_RELEASED -> publishHoldReleased(event);
       case KafkaTopics.WALLET_BANK_ACCOUNT_VERIFIED -> publishBankAccountVerified(event);
-      default -> throw new IllegalStateException("Unknown outbox event type: " + event.getEventType());
+      default ->
+          throw new IllegalStateException("Unknown outbox event type: " + event.getEventType());
     }
   }
 
   private void publishWalletCreated(OutboxEvent event) throws Exception {
-    WalletCreatedPayload payload = objectMapper.readValue(event.getPayload(), WalletCreatedPayload.class);
+    WalletCreatedPayload payload =
+        objectMapper.readValue(event.getPayload(), WalletCreatedPayload.class);
     WalletCreated avroValue =
         WalletCreated.newBuilder()
             .setWalletId(payload.getWalletId())
@@ -100,7 +102,8 @@ public class OutboxRelay extends AbstractOutboxRelay {
 
   private void send(String topic, OutboxEvent event, Object avroValue) throws Exception {
     ProducerRecord<String, Object> record =
-        new ProducerRecord<>(topic, null, event.getAggregateId(), avroValue, cloudEventHeaders.forEvent(event));
+        new ProducerRecord<>(
+            topic, null, event.getAggregateId(), avroValue, cloudEventHeaders.forEvent(event));
     kafkaTemplate.send(record).get(10, TimeUnit.SECONDS);
   }
 }

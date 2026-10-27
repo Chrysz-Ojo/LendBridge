@@ -11,6 +11,7 @@ import com.lendbridge.wallet.service.VirtualAccountService;
 import com.lendbridge.wallet.service.WalletService;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,8 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
 
   @Override
   @Transactional
-  public VirtualAccountResponse registerVirtualAccount(UUID userId, RegisterVirtualAccountRequest request) {
+  public VirtualAccountResponse registerVirtualAccount(
+      UUID userId, RegisterVirtualAccountRequest request) {
     Wallet wallet = walletService.getOrCreateWallet(userId);
     VirtualAccount virtualAccount =
         VirtualAccount.builder()
@@ -45,7 +47,13 @@ public class VirtualAccountServiceImpl implements VirtualAccountService {
   @Override
   @Transactional(readOnly = true)
   public List<VirtualAccountResponse> listVirtualAccounts(UUID userId) {
-    Wallet wallet = walletService.getOrCreateWallet(userId);
-    return virtualAccountMapper.toResponseList(virtualAccountRepository.findAllByWalletId(wallet.getId()));
+    // findWallet, not getOrCreateWallet: read-only transaction, and no wallet row yet just means
+    // no virtual accounts exist yet.
+    Optional<Wallet> wallet = walletService.findWallet(userId);
+    if (wallet.isEmpty()) {
+      return List.of();
+    }
+    return virtualAccountMapper.toResponseList(
+        virtualAccountRepository.findAllByWalletId(wallet.get().getId()));
   }
 }

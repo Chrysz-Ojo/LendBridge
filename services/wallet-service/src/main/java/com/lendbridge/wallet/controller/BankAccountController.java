@@ -33,7 +33,8 @@ public class BankAccountController {
   }
 
   @GetMapping
-  public ResponseEntity<ApiResponse<List<BankAccountResponse>>> listBankAccounts(Authentication authentication) {
+  public ResponseEntity<ApiResponse<List<BankAccountResponse>>> listBankAccounts(
+      Authentication authentication) {
     List<BankAccountResponse> response =
         bankAccountService.listBankAccounts(CurrentUser.idFrom(authentication));
     return ResponseEntity.ok(ApiResponse.success(response));

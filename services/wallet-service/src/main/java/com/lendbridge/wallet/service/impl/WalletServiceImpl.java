@@ -14,6 +14,7 @@ import com.lendbridge.wallet.repository.HoldRepository;
 import com.lendbridge.wallet.repository.WalletRepository;
 import com.lendbridge.wallet.service.WalletService;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -53,17 +54,27 @@ public class WalletServiceImpl implements WalletService {
   @Override
   @Transactional
   public Wallet getOrCreateWallet(UUID userId) {
-    Wallet wallet = walletRepository.findByUserIdForUpdate(userId).orElseGet(() -> createWalletRecord(userId));
+    Wallet wallet =
+        walletRepository.findByUserIdForUpdate(userId).orElseGet(() -> createWalletRecord(userId));
     if (wallet.getLedgerAccountId() == null) {
       LedgerAccountResponse ledgerAccount =
           ledgerGateway.openAccount(
               new OpenLedgerAccountRequest(
-                  LEDGER_ACCOUNT_TYPE, wallet.getCurrency(), LEDGER_NORMAL_BALANCE, userId.toString()));
+                  LEDGER_ACCOUNT_TYPE,
+                  wallet.getCurrency(),
+                  LEDGER_NORMAL_BALANCE,
+                  userId.toString()));
       wallet.setLedgerAccountId(ledgerAccount.getId());
       wallet.setUpdatedAt(Instant.now());
       walletRepository.save(wallet);
     }
     return wallet;
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Optional<Wallet> findWallet(UUID userId) {
+    return walletRepository.findByUserId(userId);
   }
 
   private Wallet createWalletRecord(UUID userId) {
@@ -81,15 +92,14 @@ public class WalletServiceImpl implements WalletService {
     } catch (DataIntegrityViolationException e) {
       // Lost a race against the user.registered consumer (or a concurrent request) creating the
       // same wallet first.
-      return walletRepository
-          .findByUserIdForUpdate(userId)
-          .orElseThrow(() -> e);
+      return walletRepository.findByUserIdForUpdate(userId).orElseThrow(() -> e);
     }
     outboxEventWriter.write(
         "Wallet",
         wallet.getId().toString(),
         KafkaTopics.WALLET_CREATED,
-        new WalletCreatedPayload(wallet.getId().toString(), userId.toString(), CURRENCY, now.toEpochMilli()));
+        new WalletCreatedPayload(
+            wallet.getId().toString(), userId.toString(), CURRENCY, now.toEpochMilli()));
     return wallet;
   }
 }

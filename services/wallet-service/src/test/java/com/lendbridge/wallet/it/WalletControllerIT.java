@@ -30,7 +30,9 @@ class WalletControllerIT extends AbstractIntegrationTest {
             .getContentAsString();
     String walletId = com.jayway.jsonpath.JsonPath.read(walletResponse, "$.data.id");
 
-    assertThat(walletRepository.findById(UUID.fromString(walletId)).orElseThrow().getLedgerAccountId()).isNotNull();
+    assertThat(
+            walletRepository.findById(UUID.fromString(walletId)).orElseThrow().getLedgerAccountId())
+        .isNotNull();
 
     String holdResponse =
         mockMvc
@@ -53,7 +55,9 @@ class WalletControllerIT extends AbstractIntegrationTest {
         .andExpect(jsonPath("$.data.length()", equalTo(1)));
 
     mockMvc
-        .perform(delete("/api/v1/wallets/me/holds/" + holdId).with(jwt().jwt(j -> j.subject(userId.toString()))))
+        .perform(
+            delete("/api/v1/wallets/me/holds/" + holdId)
+                .with(jwt().jwt(j -> j.subject(userId.toString()))))
         .andExpect(status().isOk());
 
     mockMvc
@@ -63,7 +67,9 @@ class WalletControllerIT extends AbstractIntegrationTest {
 
     // Releasing an already-released hold is a no-op, not an error.
     mockMvc
-        .perform(delete("/api/v1/wallets/me/holds/" + holdId).with(jwt().jwt(j -> j.subject(userId.toString()))))
+        .perform(
+            delete("/api/v1/wallets/me/holds/" + holdId)
+                .with(jwt().jwt(j -> j.subject(userId.toString()))))
         .andExpect(status().isOk());
   }
 
@@ -79,7 +85,8 @@ class WalletControllerIT extends AbstractIntegrationTest {
             .getResponse()
             .getContentAsString();
     String walletId = com.jayway.jsonpath.JsonPath.read(walletResponse, "$.data.id");
-    UUID ledgerAccountId = walletRepository.findById(UUID.fromString(walletId)).orElseThrow().getLedgerAccountId();
+    UUID ledgerAccountId =
+        walletRepository.findById(UUID.fromString(walletId)).orElseThrow().getLedgerAccountId();
     LEDGER_STUB.setBalance(ledgerAccountId, 1_000L);
 
     mockMvc
@@ -154,7 +161,9 @@ class WalletControllerIT extends AbstractIntegrationTest {
         .andExpect(jsonPath("$.data.maskedAccountNumber", equalTo("******6789")));
 
     mockMvc
-        .perform(get("/api/v1/wallets/me/bank-accounts").with(jwt().jwt(j -> j.subject(userId.toString()))))
+        .perform(
+            get("/api/v1/wallets/me/bank-accounts")
+                .with(jwt().jwt(j -> j.subject(userId.toString()))))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.data.length()", equalTo(1)));
   }

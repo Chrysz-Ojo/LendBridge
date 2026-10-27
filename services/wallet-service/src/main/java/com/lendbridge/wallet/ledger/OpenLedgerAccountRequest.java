@@ -5,8 +5,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Mirrors ledger-service's own {@code OpenAccountRequest} — no cross-service jar dependency,
- * same rule as copying its Avro schemas verbatim. */
+/**
+ * Mirrors ledger-service's own {@code OpenAccountRequest} — no cross-service jar dependency, same
+ * rule as copying its Avro schemas verbatim.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

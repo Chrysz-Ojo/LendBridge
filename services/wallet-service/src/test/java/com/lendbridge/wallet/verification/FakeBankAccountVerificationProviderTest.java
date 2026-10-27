@@ -6,11 +6,13 @@ import org.junit.jupiter.api.Test;
 
 class FakeBankAccountVerificationProviderTest {
 
-  private final FakeBankAccountVerificationProvider provider = new FakeBankAccountVerificationProvider();
+  private final FakeBankAccountVerificationProvider provider =
+      new FakeBankAccountVerificationProvider();
 
   @Test
   void verify_echoesSuppliedName_whenNotDenyListed() {
-    BankAccountVerificationResult result = provider.verify("1234567890", "058", "Caller Supplied Name");
+    BankAccountVerificationResult result =
+        provider.verify("1234567890", "058", "Caller Supplied Name");
 
     assertThat(result.isVerified()).isTrue();
     assertThat(result.getResolvedAccountName()).isEqualTo("Caller Supplied Name");

@@ -14,8 +14,10 @@ public interface WalletRepository extends JpaRepository<Wallet, UUID> {
 
   boolean existsByUserId(UUID userId);
 
-  /** Pessimistic lock so concurrent first-accesses to the same wallet serialize on lazy
-   * ledger-account provisioning instead of racing to open two ledger accounts for one wallet. */
+  /**
+   * Pessimistic lock so concurrent first-accesses to the same wallet serialize on lazy
+   * ledger-account provisioning instead of racing to open two ledger accounts for one wallet.
+   */
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   @Query("select w from Wallet w where w.userId = :userId")
   Optional<Wallet> findByUserIdForUpdate(UUID userId);

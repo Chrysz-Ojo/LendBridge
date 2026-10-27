@@ -13,11 +13,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * {@code ledgerAccountId} starts null and is filled in lazily on first authenticated access —
- * see {@code WalletServiceImpl.getOrCreateWallet}. There is no service-to-service auth mechanism
- * in this repo, so the Kafka consumer that creates this row cannot itself call ledger-service
- * (no caller JWT to forward); only an end-user-authenticated HTTP request can (ADR: lazy ledger
- * account provisioning).
+ * {@code ledgerAccountId} starts null and is filled in lazily on first authenticated access — see
+ * {@code WalletServiceImpl.getOrCreateWallet}. There is no service-to-service auth mechanism in
+ * this repo, so the Kafka consumer that creates this row cannot itself call ledger-service (no
+ * caller JWT to forward); only an end-user-authenticated HTTP request can (ADR: lazy ledger account
+ * provisioning).
  */
 @Entity
 @Table(name = "wallet")

@@ -33,7 +33,8 @@ public class VirtualAccountController {
   }
 
   @GetMapping
-  public ResponseEntity<ApiResponse<List<VirtualAccountResponse>>> listVirtualAccounts(Authentication authentication) {
+  public ResponseEntity<ApiResponse<List<VirtualAccountResponse>>> listVirtualAccounts(
+      Authentication authentication) {
     List<VirtualAccountResponse> response =
         virtualAccountService.listVirtualAccounts(CurrentUser.idFrom(authentication));
     return ResponseEntity.ok(ApiResponse.success(response));

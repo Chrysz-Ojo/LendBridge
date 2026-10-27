@@ -45,7 +45,9 @@ class HoldServiceImplTest {
   @BeforeEach
   void setUp() {
     holdMapper = Mappers.getMapper(HoldMapper.class);
-    service = new HoldServiceImpl(holdRepository, walletService, ledgerGateway, outboxEventWriter, holdMapper);
+    service =
+        new HoldServiceImpl(
+            holdRepository, walletService, ledgerGateway, outboxEventWriter, holdMapper);
     userId = UUID.randomUUID();
     wallet =
         Wallet.builder()
@@ -103,7 +105,8 @@ class HoldServiceImplTest {
             .build();
     when(holdRepository.findByIdempotencyKey("key-1")).thenReturn(Optional.of(existing));
 
-    HoldResponse response = service.createHold(userId, new CreateHoldRequest(1_000L, "ref"), "key-1");
+    HoldResponse response =
+        service.createHold(userId, new CreateHoldRequest(1_000L, "ref"), "key-1");
 
     assertThat(response.getId()).isEqualTo(existing.getId());
     verify(walletService, never()).getOrCreateWallet(any());
@@ -121,7 +124,7 @@ class HoldServiceImplTest {
             .idempotencyKey("key-1")
             .createdAt(Instant.now())
             .build();
-    when(walletService.getOrCreateWallet(userId)).thenReturn(wallet);
+    when(walletService.findWallet(userId)).thenReturn(Optional.of(wallet));
     when(holdRepository.findById(hold.getId())).thenReturn(Optional.of(hold));
 
     service.releaseHold(userId, hold.getId());
@@ -144,12 +147,32 @@ class HoldServiceImplTest {
             .createdAt(Instant.now())
             .releasedAt(Instant.now())
             .build();
-    when(walletService.getOrCreateWallet(userId)).thenReturn(wallet);
+    when(walletService.findWallet(userId)).thenReturn(Optional.of(wallet));
     when(holdRepository.findById(hold.getId())).thenReturn(Optional.of(hold));
 
     service.releaseHold(userId, hold.getId());
 
     verify(holdRepository, never()).save(any());
     verify(outboxEventWriter, never()).write(any(), any(), any(), any());
+  }
+
+  @Test
+  void listActiveHolds_returnsEmpty_whenWalletNotYetProvisioned() {
+    when(walletService.findWallet(userId)).thenReturn(Optional.empty());
+
+    assertThat(service.listActiveHolds(userId)).isEmpty();
+    verify(holdRepository, never()).findAllByWalletIdAndStatusOrderByCreatedAtDesc(any(), any());
+  }
+
+  @Test
+  void listActiveHolds_doesNotUseLockingLookup() {
+    when(walletService.findWallet(userId)).thenReturn(Optional.of(wallet));
+    when(holdRepository.findAllByWalletIdAndStatusOrderByCreatedAtDesc(
+            wallet.getId(), HoldStatus.ACTIVE))
+        .thenReturn(java.util.List.of());
+
+    service.listActiveHolds(userId);
+
+    verify(walletService, never()).getOrCreateWallet(any());
   }
 }

@@ -14,8 +14,10 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-/** Pure OAuth2 resource server: this service never issues tokens, only validates ones
- * authentication-service already issued. */
+/**
+ * Pure OAuth2 resource server: this service never issues tokens, only validates ones
+ * authentication-service already issued.
+ */
 @Configuration
 public class SecurityConfig {
 
@@ -35,10 +37,11 @@ public class SecurityConfig {
   }
 
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationConverter jwtAuthenticationConverter)
-      throws Exception {
+  public SecurityFilterChain filterChain(
+      HttpSecurity http, JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
     http.csrf(AbstractHttpConfigurer::disable)
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .sessionManagement(
+            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
             auth ->
                 auth.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
@@ -47,7 +50,8 @@ public class SecurityConfig {
                     .authenticated())
         .addFilterBefore(new CorrelationIdFilter(), UsernamePasswordAuthenticationFilter.class)
         .oauth2ResourceServer(
-            oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)));
+            oauth2 ->
+                oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)));
     return http.build();
   }
 }

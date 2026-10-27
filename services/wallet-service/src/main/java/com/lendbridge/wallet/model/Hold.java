@@ -15,11 +15,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * A reservation against a wallet's available balance — never a ledger posting. Only when a loan
- * is funded (Loan's funding saga, not yet built) does a hold convert into a real ledger debit.
- * {@code idempotencyKey} exists because creating a hold reserves real user funds even though
- * nothing is posted to the ledger: an un-deduplicated retry would double-reserve a lender's
- * available balance, a real correctness bug despite no money actually moving.
+ * A reservation against a wallet's available balance — never a ledger posting. Only when a loan is
+ * funded (Loan's funding saga, not yet built) does a hold convert into a real ledger debit. {@code
+ * idempotencyKey} exists because creating a hold reserves real user funds even though nothing is
+ * posted to the ledger: an un-deduplicated retry would double-reserve a lender's available balance,
+ * a real correctness bug despite no money actually moving.
  */
 @Entity
 @Table(name = "hold")
