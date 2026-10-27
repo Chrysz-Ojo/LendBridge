@@ -69,7 +69,8 @@
       </dependency>
       <dependency>
         <!-- S3-compatible object storage (document-service). Portable to real AWS S3 with zero
-             code change; talks to MinIO locally/in CI via endpoint override + path-style access. -->
+             code change; talks to LocalStack locally/in CI via endpoint override + path-style
+             access. -->
         <groupId>software.amazon.awssdk</groupId>
         <artifactId>bom</artifactId>
         <version>${aws-sdk.version}</version>

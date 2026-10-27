@@ -42,7 +42,7 @@ platform:
 
 documents:
   storage:
-    endpoint: ${DOCUMENTS_STORAGE_ENDPOINT:http://localhost:9000}
+    endpoint: ${DOCUMENTS_STORAGE_ENDPOINT:http://localhost:4566}
     region: ${DOCUMENTS_STORAGE_REGION:us-east-1}
     bucket: ${DOCUMENTS_STORAGE_BUCKET:lendbridge-documents}
     access-key: ${DOCUMENTS_STORAGE_ACCESS_KEY}

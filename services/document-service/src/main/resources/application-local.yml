@@ -9,5 +9,6 @@ spring:
 
 documents:
   storage:
-    access-key: lendbridge-local
-    secret-key: local-dev-only-password
+    # LocalStack ignores credential values entirely; "test"/"test" is just the AWS CLI convention.
+    access-key: test
+    secret-key: test

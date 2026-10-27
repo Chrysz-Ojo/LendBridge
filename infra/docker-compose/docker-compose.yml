@@ -42,18 +42,15 @@ services:
     ports:
       - "6379:6379"
 
-  minio:
-    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
-    command: server /data --console-address ":9001"
+  localstack:
+    image: localstack/localstack:4.0
     environment:
-      MINIO_ROOT_USER: lendbridge-local
-      MINIO_ROOT_PASSWORD: local-dev-only-password
+      SERVICES: s3
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "4566:4566"
     volumes:
-      - minio-data:/data
+      - localstack-data:/var/lib/localstack
 
 volumes:
   postgres-data:
-  minio-data:
+  localstack-data:

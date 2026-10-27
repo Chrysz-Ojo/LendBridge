@@ -9,16 +9,18 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.KafkaContainer;
-import org.testcontainers.containers.MinIOContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.localstack.LocalStackContainer;
+import org.testcontainers.containers.localstack.LocalStackContainer.Service;
 import org.testcontainers.utility.DockerImageName;
 
 /**
- * Shared Testcontainers fixture: Postgres + Kafka + Schema Registry + MinIO, all started manually
- * in a {@code static} block rather than via {@code @Testcontainers}/{@code @Container}, which
- * would stop them in {@code afterAll()} of whichever IT class runs first even though the fields
- * are static — manual start keeps one singleton set of containers alive for the whole suite.
+ * Shared Testcontainers fixture: Postgres + Kafka + Schema Registry + LocalStack (S3), all
+ * started manually in a {@code static} block rather than via {@code
+ * @Testcontainers}/{@code @Container}, which would stop them in {@code afterAll()} of whichever
+ * IT class runs first even though the fields are static — manual start keeps one singleton set of
+ * containers alive for the whole suite.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
@@ -48,16 +50,15 @@ public abstract class AbstractIntegrationTest {
           .withEnv("SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS", "PLAINTEXT://kafka:9092")
           .dependsOn(KAFKA);
 
-  static final MinIOContainer MINIO =
-      new MinIOContainer(DockerImageName.parse("minio/minio:RELEASE.2024-12-18T13-15-44Z"))
-          .withUserName("test-access-key")
-          .withPassword("test-secret-key");
+  static final LocalStackContainer LOCALSTACK =
+      new LocalStackContainer(DockerImageName.parse("localstack/localstack:4.0"))
+          .withServices(Service.S3);
 
   static {
     POSTGRES.start();
     KAFKA.start();
     SCHEMA_REGISTRY.start();
-    MINIO.start();
+    LOCALSTACK.start();
   }
 
   @DynamicPropertySource
@@ -73,10 +74,12 @@ public abstract class AbstractIntegrationTest {
     registry.add("platform.outbox.relay-interval-ms", () -> "500");
     registry.add("platform.outbox.ce-source", () -> "lendbridge://document-service");
 
-    registry.add("documents.storage.endpoint", MINIO::getS3URL);
+    registry.add(
+        "documents.storage.endpoint", () -> LOCALSTACK.getEndpointOverride(Service.S3).toString());
+    registry.add("documents.storage.region", LOCALSTACK::getRegion);
     registry.add("documents.storage.bucket", () -> BUCKET);
-    registry.add("documents.storage.access-key", MINIO::getUserName);
-    registry.add("documents.storage.secret-key", MINIO::getPassword);
+    registry.add("documents.storage.access-key", LOCALSTACK::getAccessKey);
+    registry.add("documents.storage.secret-key", LOCALSTACK::getSecretKey);
     registry.add("documents.storage.path-style-access", () -> "true");
   }
 
