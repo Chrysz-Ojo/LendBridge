@@ -1,0 +1,65 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-liveness-result
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: liveness_result
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: verification_case_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: provider
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: selfie_document_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: id_card_document_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: liveness_score
+                  type: double
+              - column:
+                  name: liveness_passed
+                  type: boolean
+              - column:
+                  name: face_match_score
+                  type: double
+              - column:
+                  name: face_match_passed
+                  type: boolean
+              - column:
+                  name: outcome
+                  type: varchar(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: raw_response
+                  type: text
+              - column:
+                  name: checked_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: liveness_result
+            indexName: idx_liveness_result_verification_case_id
+            columns:
+              - column:
+                  name: verification_case_id

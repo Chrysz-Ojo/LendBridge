@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "KycVerified",
+  "namespace": "com.lendbridge.kyc.avro",
+  "doc": "Published when a verification case is auto- or manually- approved, reaching at least Tier 1.",
+  "fields": [
+    { "name": "verificationCaseId", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "trustTier", "type": "string" },
+    { "name": "occurredAtEpochMillis", "type": "long" }
+  ]
+}
