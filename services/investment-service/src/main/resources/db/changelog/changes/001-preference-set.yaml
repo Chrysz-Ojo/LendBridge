@@ -1,0 +1,60 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-preference-set
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: preference_set
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: lender_user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount_per_loan_kobo
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_budget_kobo
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: min_rate_bps
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: min_tenor_months
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: max_tenor_months
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: preference_set
+            indexName: idx_preference_set_lender_user_id
+            columns:
+              - column:
+                  name: lender_user_id

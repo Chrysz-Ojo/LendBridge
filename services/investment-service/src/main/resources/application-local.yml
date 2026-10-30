@@ -1,0 +1,12 @@
+# Local-development-only defaults. Never use these values outside a developer's own machine;
+# production configuration must come entirely from environment variables (CLAUDE.md "no secrets
+# in code").
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/investment_db
+    username: investment_service
+    password: local-dev-only-password
+
+platform:
+  field-encryption:
+    key: l6ni0RC6QAlJ0xo8Sp0GnULMNg/whNMU+Mc2fnzDpQ4=

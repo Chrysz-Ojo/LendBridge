@@ -54,6 +54,7 @@ public class ListingServiceImpl implements ListingService {
         .interestRateBps(listing.getInterestRateBps())
         .tenorMonths(listing.getTenorMonths())
         .purpose(listing.getPurpose())
+        .fundedAmountKobo(listing.getFundedAmountKobo())
         .listedAt(listing.getListedAt())
         .build();
   }

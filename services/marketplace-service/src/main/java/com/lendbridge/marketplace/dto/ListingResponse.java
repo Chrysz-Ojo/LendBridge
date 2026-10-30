@@ -19,5 +19,6 @@ public class ListingResponse {
   private int interestRateBps;
   private int tenorMonths;
   private String purpose;
+  private long fundedAmountKobo;
   private Instant listedAt;
 }

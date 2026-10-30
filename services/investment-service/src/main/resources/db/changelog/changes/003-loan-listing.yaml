@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-loan-listing
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: loan_listing
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: borrower_user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount_kobo
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: active
+                  type: boolean
+                  constraints:
+                    nullable: false

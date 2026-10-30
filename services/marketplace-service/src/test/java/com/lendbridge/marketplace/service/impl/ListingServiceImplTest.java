@@ -40,6 +40,7 @@ class ListingServiceImplTest {
         .tenorMonths(6)
         .purpose("BUSINESS")
         .status(status)
+        .fundedAmountKobo(150_000L)
         .listedAt(now)
         .createdAt(now)
         .updatedAt(now)
@@ -84,6 +85,7 @@ class ListingServiceImplTest {
 
     assertThat(response.getId()).isEqualTo(listing.getId());
     assertThat(response.getAmountKobo()).isEqualTo(300_000L);
+    assertThat(response.getFundedAmountKobo()).isEqualTo(150_000L);
   }
 
   @Test

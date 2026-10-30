@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/changes/001-listing.yaml
   - include:
       file: db/changelog/changes/002-processed-event.yaml
+  - include:
+      file: db/changelog/changes/003-listing-funded-amount.yaml

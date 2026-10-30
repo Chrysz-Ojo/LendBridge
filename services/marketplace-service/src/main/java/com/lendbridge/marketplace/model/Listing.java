@@ -49,6 +49,14 @@ public class Listing {
   @Column(name = "purpose", nullable = false)
   private String purpose;
 
+  /** Running total of active commitments against this loan, maintained by
+   * {@code InvestmentCommittedEventConsumer}/{@code InvestmentCancelledEventConsumer} — PRD E3-S2's
+   * "amount funded so far" display requirement. Starts at zero; investment-service is the system
+   * of record for the underlying commitments, this is purely a denormalized display field. */
+  @Column(name = "funded_amount_kobo", nullable = false)
+  @Builder.Default
+  private long fundedAmountKobo = 0L;
+
   @Enumerated(EnumType.STRING)
   @Column(name = "status", nullable = false)
   private ListingStatus status;
