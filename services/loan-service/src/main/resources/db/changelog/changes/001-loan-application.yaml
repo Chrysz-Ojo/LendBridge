@@ -1,0 +1,104 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-loan-application
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: loan_application
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: borrower_user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount_kobo
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tenor_months
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: purpose
+                  type: varchar(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: purpose_detail
+                  type: text
+              - column:
+                  name: interest_rate_bps
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: review_required
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: decided_by_user_id
+                  type: uuid
+              - column:
+                  name: decided_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: rejection_reason
+                  type: varchar(500)
+              - column:
+                  name: agreement_document_id
+                  type: uuid
+              - column:
+                  name: listed_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: loan_application
+            indexName: idx_loan_application_borrower_user_id
+            columns:
+              - column:
+                  name: borrower_user_id
+  - changeSet:
+      id: 001-loan-application-open-request-unique-index
+      author: lendbridge
+      comment: >
+        Partial unique index enforcing at most one open request (DRAFT, UNDER_REVIEW or LISTED)
+        per borrower (PRD E6-S5). Liquibase's createIndex change type has no portable WHERE-clause
+        support, hence raw SQL — same technique as kyc-service's open-verification-case index.
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: >
+              CREATE UNIQUE INDEX uq_loan_application_open_per_borrower
+              ON loan_application (borrower_user_id)
+              WHERE status IN ('DRAFT', 'UNDER_REVIEW', 'LISTED')
+      rollback:
+        - sql:
+            sql: DROP INDEX uq_loan_application_open_per_borrower

@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "LoanSubmitted",
+  "namespace": "com.lendbridge.loan.avro",
+  "doc": "Published when a borrower submits a Draft loan application for review.",
+  "fields": [
+    {"name": "loanId", "type": "string"},
+    {"name": "borrowerUserId", "type": "string"},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

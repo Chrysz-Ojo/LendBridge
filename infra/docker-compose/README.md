@@ -31,6 +31,9 @@ CREATE DATABASE wallet_db OWNER wallet_service;
 
 CREATE ROLE kyc_service LOGIN PASSWORD 'local-dev-only-password';
 CREATE DATABASE kyc_db OWNER kyc_service;
+
+CREATE ROLE loan_service LOGIN PASSWORD 'local-dev-only-password';
+CREATE DATABASE loan_db OWNER loan_service;
 SQL
 ```
 
@@ -102,4 +105,12 @@ calls (Smile Identity, Dojah, Prembly) are disabled locally by default
 
 ```
 SPRING_PROFILES_ACTIVE=local ./mvnw -pl services/kyc-service -am spring-boot:run
+```
+
+Run loan-service (listens on 8094; needs authentication-service for JWKS, kyc-service for trust-tier
+checks, and document-service for agreement PDF uploads — bring both up first). Phase 1 only: no
+funding, disbursement or repayment yet — see docs/adr/0015-loan-service-phase-1-scope.md:
+
+```
+SPRING_PROFILES_ACTIVE=local ./mvnw -pl services/loan-service -am spring-boot:run
 ```
