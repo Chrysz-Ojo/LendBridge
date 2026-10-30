@@ -1,0 +1,65 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-nin-result
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: nin_result
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: verification_case_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: provider
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: nin_ciphertext
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: nin_hash
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name_match
+                  type: boolean
+              - column:
+                  name: dob_match
+                  type: boolean
+              - column:
+                  name: outcome
+                  type: varchar(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: raw_response
+                  type: text
+              - column:
+                  name: checked_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: nin_result
+            indexName: idx_nin_result_verification_case_id
+            columns:
+              - column:
+                  name: verification_case_id
+        - createIndex:
+            tableName: nin_result
+            indexName: idx_nin_result_nin_hash
+            columns:
+              - column:
+                  name: nin_hash

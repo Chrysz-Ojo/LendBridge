@@ -1,0 +1,39 @@
+# Local-development-only defaults. Never use these values outside a developer's own machine;
+# production configuration must come entirely from environment variables (CLAUDE.md "no secrets
+# in code").
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/kyc_db
+    username: kyc_service
+    password: local-dev-only-password
+
+platform:
+  field-encryption:
+    key: 7Jk3mQscnF2n1aV5x1m8w0G0bGJ1vH0bqk5c0kQF5r0=
+
+kyc:
+  provider:
+    primary: fake
+    secondary: fake
+    # To try a real provider locally once API keys are issued: pick two of SMILE_IDENTITY, DOJAH,
+    # PREMBLY as primary/secondary here, uncomment the matching block(s) below, and replace the
+    # REPLACE_WITH_REAL_* placeholders. Never commit real keys (CLAUDE.md: no secrets in code) —
+    # keep real values in your own shell env or an untracked local override instead.
+    # primary: smile_identity
+    # secondary: dojah
+  identity-hash:
+    pepper: local-dev-only-identity-hash-pepper-do-not-use-in-prod
+
+# Dummy placeholders for local testing against real KYC providers — commented out, inactive until
+# kyc.provider.primary/secondary above is switched away from "fake" to match.
+# smileidentity:
+#   partner-id: REPLACE_WITH_REAL_PARTNER_ID
+#   api-key: REPLACE_WITH_REAL_API_KEY
+#
+# dojah:
+#   app-id: REPLACE_WITH_REAL_APP_ID
+#   secret-key: REPLACE_WITH_REAL_SECRET_KEY
+#
+# prembly:
+#   api-key: REPLACE_WITH_REAL_API_KEY
+#   app-id: REPLACE_WITH_REAL_APP_ID

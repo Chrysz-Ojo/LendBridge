@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changes/001-verification-case.yaml
+  - include:
+      file: db/changelog/changes/002-bvn-result.yaml
+  - include:
+      file: db/changelog/changes/003-nin-result.yaml
+  - include:
+      file: db/changelog/changes/004-liveness-result.yaml
+  - include:
+      file: db/changelog/changes/005-outbox-event.yaml

@@ -1,0 +1,65 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-bvn-result
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: bvn_result
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: verification_case_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: provider
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: bvn_ciphertext
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: bvn_hash
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name_match
+                  type: boolean
+              - column:
+                  name: dob_match
+                  type: boolean
+              - column:
+                  name: outcome
+                  type: varchar(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: raw_response
+                  type: text
+              - column:
+                  name: checked_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: bvn_result
+            indexName: idx_bvn_result_verification_case_id
+            columns:
+              - column:
+                  name: verification_case_id
+        - createIndex:
+            tableName: bvn_result
+            indexName: idx_bvn_result_bvn_hash
+            columns:
+              - column:
+                  name: bvn_hash

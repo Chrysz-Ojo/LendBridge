@@ -161,7 +161,7 @@ The platform delivers 11 epics: the 8 MVP epics for lenders and borrowers, plus 
 | ID | User story | Acceptance criteria | Priority | Service |
 | --- | --- | --- | --- | --- |
 | E2-S1 | As a user, I want to create my profile with personal and financial details. | Captures name, DOB, address, phone, email, employment status, employer or business, monthly income; partial saves allowed. | P0 | User Profile |
-| E2-S2 | As a user, I want my identity verified with my BVN. | BVN validated with the KYC provider; name and DOB must match profile within the configured tolerance; mismatches go to manual review. | P0 | KYC |
+| E2-S2 | As a user, I want my identity verified with my BVN and NIN. | BVN and NIN validated with the KYC provider; name and DOB must match profile within the configured tolerance; mismatches go to manual review. | P0 | KYC |
 | E2-S3 | As a borrower, I want to upload my ID card image, selfie and bank statement. | Accepts JPG, PNG, PDF ≤ 10 MB; bank statement must be dated within the last 3 months; files virus-scanned and stored encrypted; liveness check on selfie. | P0 | KYC, Document |
 | E2-S4 | As a user, I want to know my verification status and trust level. | Status: Pending, Verified, Rejected, Needs more info; trust tier 1–3 shown with the borrowing or lending limit it unlocks; rejection reason shown. | P0 | KYC |
 | E2-S5 | As a user, I want to add and verify the bank account I withdraw to. | Account name lookup must match KYC name; only verified accounts can receive withdrawals. | P0 | Wallet |
@@ -191,7 +191,7 @@ The platform delivers 11 epics: the 8 MVP epics for lenders and borrowers, plus 
 | --- | --- | --- | --- | --- |
 | E5-S1 | As a lender, I want comprehensive borrower information. | Profile shows verified status, trust level, employment, income band, credit bureau summary (where consented), document checklist (not the raw documents). | P0 | Marketplace, Risk |
 | E5-S2 | As a lender, I want risk tools for each application. | Each listing has a risk grade A–E, expected default band and debt-to-income ratio; grading model version recorded. | P0 | Risk |
-| E5-S3 | As a lender, I want to rely on platform verification. | Only KYC-verified borrowers can be listed; verification badges show which checks passed (BVN, ID, liveness, bank statement). | P0 | KYC |
+| E5-S3 | As a lender, I want to rely on platform verification. | Only KYC-verified borrowers can be listed; verification badges show which checks passed (BVN, NIN, ID, liveness, bank statement). | P0 | KYC |
 | E5-S4 | As a lender, I want historical performance data. | Borrower profile lists previous and ongoing loans with on-time %, late and missed counts; platform-wide default rates by grade are published. | P1 | Loan, Reporting |
 
 ### E6. Borrower: loan application
@@ -302,7 +302,7 @@ Only the Ledger Service can move money; Wallet balances are views over the ledge
 | Admin BFF | Aggregates data for the back-office; enforces staff roles and maker-checker | — | Reachable only over VPN and staff SSO |
 | Authentication | Sign-up, login, MFA, tokens, password reset, roles; own JWT issuer | user.registered | Issues and validates its own OAuth2/OIDC-style JWTs; no external identity provider |
 | User Profile | Personal, employment and income data; role flags; preferences | profile.updated | PII encrypted at field level |
-| KYC | BVN, ID, liveness, bank-statement checks; trust tier; manual review cases | kyc.verified, kyc.rejected | Provider adapters with fallback |
+| KYC | BVN, NIN, ID, liveness, bank-statement checks; trust tier; manual review cases | kyc.verified, kyc.rejected | Provider adapters with fallback |
 | Document | Uploads, virus scan, encrypted storage, signed URLs; agreement PDFs | document.uploaded | Pre-signed S3 URLs, 5-minute expiry |
 | Loan | Applications, lifecycle state machine, agreements, schedules, late fees, funding saga | loan.*, repayment.* | Highest-criticality domain service |
 | Marketplace | Listings, search, filters, direct offers, offer comparison | listing.*, offer.* | OpenSearch read model rebuilt from events |
@@ -327,7 +327,7 @@ Each service owns its database and publishes its state changes as Kafka events t
 | --- | --- | --- |
 | Authentication | PostgreSQL | Users, credentials, roles, MFA, sessions |
 | User Profile | PostgreSQL | Profile, employment, income, role flags, preferences |
-| KYC | PostgreSQL | Verification case, BVN result, liveness result, trust tier |
+| KYC | PostgreSQL | Verification case, BVN result, NIN result, liveness result, trust tier |
 | Document | PostgreSQL + S3-compatible object storage | Document metadata, file pointer, checksum, scan status |
 | Loan | PostgreSQL | Loan request, agreement, repayment schedule, instalment, state history |
 | Marketplace | PostgreSQL + OpenSearch (read model) | Listing, offer, listing search index |
@@ -405,7 +405,7 @@ Any failure triggers compensations in reverse order, and the case goes to the ad
 | Method and path | Purpose | Service |
 | --- | --- | --- |
 | POST /api/v1/auth/register | Sign up | Authentication |
-| POST /api/v1/kyc/verifications | Start KYC with BVN and documents | KYC |
+| POST /api/v1/kyc/verifications | Start KYC with BVN, NIN and documents | KYC |
 | PUT /api/v1/lenders/me/preferences/{id} | Save investment preferences | Investment |
 | GET /api/v1/marketplace/listings?grade=A,B&minRate=18 | Browse listings | Marketplace |
 | POST /api/v1/loans | Create loan application | Loan |

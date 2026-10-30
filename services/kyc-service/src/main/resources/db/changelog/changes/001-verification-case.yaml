@@ -1,0 +1,98 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-verification-case
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: verification_case
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: trust_tier
+                  type: varchar(10)
+              - column:
+                  name: review_required
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rejection_reason
+                  type: varchar(500)
+              - column:
+                  name: needs_more_info_reason
+                  type: varchar(500)
+              - column:
+                  name: id_card_document_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: selfie_document_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: bank_statement_document_id
+                  type: uuid
+              - column:
+                  name: bank_statement_outcome
+                  type: varchar(10)
+              - column:
+                  name: document_snapshot
+                  type: text
+              - column:
+                  name: decided_by_user_id
+                  type: uuid
+              - column:
+                  name: decided_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: verification_case
+            indexName: idx_verification_case_user_id
+            columns:
+              - column:
+                  name: user_id
+  - changeSet:
+      id: 001-verification-case-open-case-unique-index
+      author: lendbridge
+      comment: >
+        Partial unique index enforcing at most one open case (PENDING or NEEDS_MORE_INFO) per
+        user — what IdempotencyOperations.runIdempotently keys off of in
+        VerificationServiceImpl.startVerification (see the approved plan's design decisions).
+        Liquibase's createIndex change type has no portable WHERE-clause support, hence raw SQL.
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: >
+              CREATE UNIQUE INDEX uq_verification_case_open_per_user
+              ON verification_case (user_id)
+              WHERE status IN ('PENDING', 'NEEDS_MORE_INFO')
+      rollback:
+        - sql:
+            sql: DROP INDEX uq_verification_case_open_per_user

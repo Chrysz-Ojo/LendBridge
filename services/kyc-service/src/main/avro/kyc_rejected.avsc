@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "KycRejected",
+  "namespace": "com.lendbridge.kyc.avro",
+  "doc": "Published when a verification case is auto- or manually- rejected.",
+  "fields": [
+    { "name": "verificationCaseId", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "reason", "type": "string" },
+    { "name": "occurredAtEpochMillis", "type": "long" }
+  ]
+}
