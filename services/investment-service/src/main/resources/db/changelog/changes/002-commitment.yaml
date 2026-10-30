@@ -1,0 +1,69 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-commitment
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: commitment
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: lender_user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: loan_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount_kobo
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: hold_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: idempotency_key
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: cancelled_at
+                  type: TIMESTAMP WITH TIME ZONE
+        - createIndex:
+            tableName: commitment
+            indexName: idx_commitment_loan_id_status
+            columns:
+              - column:
+                  name: loan_id
+              - column:
+                  name: status
+        - createIndex:
+            tableName: commitment
+            indexName: idx_commitment_lender_user_id_status
+            columns:
+              - column:
+                  name: lender_user_id
+              - column:
+                  name: status

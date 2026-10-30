@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-listing-funded-amount
+      author: lendbridge
+      changes:
+        - addColumn:
+            tableName: listing
+            columns:
+              - column:
+                  name: funded_amount_kobo
+                  type: bigint
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false

@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "InvestmentCancelled",
+  "namespace": "com.lendbridge.investment.avro",
+  "doc": "Published when a lender cancels a commitment (the wallet-service hold is released in the same request). marketplace-service consumes this to subtract the amount back off its funded-so-far total.",
+  "fields": [
+    {"name": "commitmentId", "type": "string"},
+    {"name": "loanId", "type": "string"},
+    {"name": "amountKobo", "type": "long"},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

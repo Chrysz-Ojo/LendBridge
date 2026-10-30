@@ -37,6 +37,9 @@ CREATE DATABASE loan_db OWNER loan_service;
 
 CREATE ROLE marketplace_service LOGIN PASSWORD 'local-dev-only-password';
 CREATE DATABASE marketplace_db OWNER marketplace_service;
+
+CREATE ROLE investment_service LOGIN PASSWORD 'local-dev-only-password';
+CREATE DATABASE investment_db OWNER investment_service;
 SQL
 ```
 
@@ -126,4 +129,14 @@ docs/adr/0016-marketplace-service-phase-1-scope.md:
 
 ```
 SPRING_PROFILES_ACTIVE=local ./mvnw -pl services/marketplace-service -am spring-boot:run
+```
+
+Run investment-service (listens on 8096; needs authentication-service for JWKS, wallet-service for
+placing/releasing the real hold behind a commitment, and loan-service running first so there's a
+`loan.listed` event to build its own loan-listing projection from). Phase 1 only: preferences and
+commitments only — no auto-invest, portfolio earnings or funding-saga disbursement yet — see
+docs/adr/0017-investment-service-phase-1-scope.md:
+
+```
+SPRING_PROFILES_ACTIVE=local ./mvnw -pl services/investment-service -am spring-boot:run
 ```

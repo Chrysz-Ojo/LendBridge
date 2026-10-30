@@ -26,5 +26,6 @@
     <module>services/kyc-service</module>
     <module>services/loan-service</module>
     <module>services/marketplace-service</module>
+    <module>services/investment-service</module>
   </modules>
 </project>
