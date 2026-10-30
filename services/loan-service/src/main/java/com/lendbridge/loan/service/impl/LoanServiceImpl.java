@@ -13,6 +13,7 @@ import com.lendbridge.loan.mapper.LoanMapper;
 import com.lendbridge.loan.model.LoanApplication;
 import com.lendbridge.loan.model.LoanStatus;
 import com.lendbridge.loan.outbox.KafkaTopics;
+import com.lendbridge.loan.outbox.LoanDelistedPayload;
 import com.lendbridge.loan.outbox.LoanSubmittedPayload;
 import com.lendbridge.loan.repository.LoanApplicationRepository;
 import com.lendbridge.loan.service.LoanService;
@@ -157,9 +158,22 @@ public class LoanServiceImpl implements LoanService {
       throw new ConflictException(
           "LOAN_NOT_CANCELLABLE", "A loan can only be cancelled while Draft, Under review or Listed");
     }
+    boolean wasListed = loan.getStatus() == LoanStatus.LISTED;
+    Instant now = Instant.now();
     loan.setStatus(LoanStatus.CANCELLED);
     loan.setReviewRequired(false);
-    loan.setUpdatedAt(Instant.now());
+    loan.setUpdatedAt(now);
+
+    if (wasListed) {
+      // marketplace-service's read model only has a listing to remove if this loan ever reached
+      // Listed — a Draft/Under review cancellation never published loan.listed in the first place.
+      outboxEventWriter.write(
+          "LoanApplication",
+          loan.getId().toString(),
+          KafkaTopics.LOAN_DELISTED,
+          LoanDelistedPayload.builder().loanId(loan.getId()).occurredAtEpochMillis(now.toEpochMilli()).build());
+    }
+
     loanApplicationRepository.save(loan);
     return toResponse(loan);
   }

@@ -1,6 +1,7 @@
 package com.lendbridge.loan.outbox;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lendbridge.loan.avro.LoanDelisted;
 import com.lendbridge.loan.avro.LoanListed;
 import com.lendbridge.loan.avro.LoanSubmitted;
 import com.lendbridge.starter.outbox.AbstractOutboxRelay;
@@ -35,6 +36,7 @@ public class OutboxRelay extends AbstractOutboxRelay {
     switch (event.getEventType()) {
       case KafkaTopics.LOAN_SUBMITTED -> publishLoanSubmitted(event);
       case KafkaTopics.LOAN_LISTED -> publishLoanListed(event);
+      case KafkaTopics.LOAN_DELISTED -> publishLoanDelisted(event);
       default -> throw new IllegalStateException("Unknown outbox event type: " + event.getEventType());
     }
   }
@@ -59,9 +61,20 @@ public class OutboxRelay extends AbstractOutboxRelay {
             .setAmountKobo(payload.getAmountKobo())
             .setInterestRateBps(payload.getInterestRateBps())
             .setTenorMonths(payload.getTenorMonths())
+            .setPurpose(payload.getPurpose())
             .setOccurredAtEpochMillis(payload.getOccurredAtEpochMillis())
             .build();
     send(KafkaTopics.LOAN_LISTED, event, avroValue);
+  }
+
+  private void publishLoanDelisted(OutboxEvent event) throws Exception {
+    LoanDelistedPayload payload = objectMapper.readValue(event.getPayload(), LoanDelistedPayload.class);
+    LoanDelisted avroValue =
+        LoanDelisted.newBuilder()
+            .setLoanId(payload.getLoanId().toString())
+            .setOccurredAtEpochMillis(payload.getOccurredAtEpochMillis())
+            .build();
+    send(KafkaTopics.LOAN_DELISTED, event, avroValue);
   }
 
   private void send(String topic, OutboxEvent event, Object avroValue) throws Exception {

@@ -1,0 +1,50 @@
+server:
+  port: ${SERVER_PORT:8095}
+
+spring:
+  application:
+    name: marketplace-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: marketplace-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+      properties:
+        schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8085}
+        specific.avro.reader: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_SERVICE_JWK_SET_URI:http://localhost:8081/.well-known/jwks.json}
+
+platform:
+  field-encryption:
+    key: ${MARKETPLACE_FIELD_ENCRYPTION_KEY}
+  # Phase 1 publishes nothing, but platform-starter's CloudEventHeaders is an unconditional
+  # @Component requiring this property regardless (same class of gotcha as field-encryption.key
+  # above) — set it anyway so the context loads; harmless since nothing calls it.
+  outbox:
+    ce-source: lendbridge://marketplace-service
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

@@ -1,0 +1,10 @@
+{
+  "type": "record",
+  "name": "LoanDelisted",
+  "namespace": "com.lendbridge.loan.avro",
+  "doc": "Published when a Listed loan is cancelled, so the (not yet built) marketplace's read model can remove the stale listing.",
+  "fields": [
+    {"name": "loanId", "type": "string"},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

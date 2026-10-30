@@ -94,6 +94,7 @@ public class LoanReviewServiceImpl implements LoanReviewService {
             .amountKobo(loan.getAmountKobo())
             .interestRateBps(loan.getInterestRateBps())
             .tenorMonths(loan.getTenorMonths())
+            .purpose(loan.getPurpose().name())
             .occurredAtEpochMillis(now.toEpochMilli())
             .build());
   }

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -176,6 +177,28 @@ class LoanServiceImplTest {
     LoanResponse response = service.cancel(borrowerId, loan.getId());
 
     assertThat(response.getStatus()).isEqualTo(LoanStatus.CANCELLED);
+  }
+
+  @Test
+  void cancel_fromListed_publishesDelistedEvent() {
+    UUID borrowerId = UUID.randomUUID();
+    LoanApplication loan = loan(borrowerId, LoanStatus.LISTED);
+    when(repository.findById(loan.getId())).thenReturn(Optional.of(loan));
+
+    service.cancel(borrowerId, loan.getId());
+
+    verify(outboxEventWriter).write(any(), any(), any(), any());
+  }
+
+  @Test
+  void cancel_fromDraft_doesNotPublishDelistedEvent() {
+    UUID borrowerId = UUID.randomUUID();
+    LoanApplication loan = loan(borrowerId, LoanStatus.DRAFT);
+    when(repository.findById(loan.getId())).thenReturn(Optional.of(loan));
+
+    service.cancel(borrowerId, loan.getId());
+
+    verify(outboxEventWriter, never()).write(any(), any(), any(), any());
   }
 
   @Test

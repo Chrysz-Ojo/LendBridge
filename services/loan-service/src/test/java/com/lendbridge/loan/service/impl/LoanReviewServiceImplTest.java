@@ -16,6 +16,7 @@ import com.lendbridge.loan.model.LoanApplication;
 import com.lendbridge.loan.model.LoanPurpose;
 import com.lendbridge.loan.model.LoanReviewDecision;
 import com.lendbridge.loan.model.LoanStatus;
+import com.lendbridge.loan.outbox.LoanListedPayload;
 import com.lendbridge.loan.repository.LoanApplicationRepository;
 import com.lendbridge.starter.exception.BadRequestException;
 import com.lendbridge.starter.exception.ConflictException;
@@ -27,6 +28,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 class LoanReviewServiceImplTest {
 
@@ -80,7 +82,9 @@ class LoanReviewServiceImplTest {
     assertThat(response.getStatus()).isEqualTo(LoanStatus.LISTED);
     assertThat(response.getListedAt()).isNotNull();
     assertThat(response.getExpiresAt()).isNotNull();
-    verify(outboxEventWriter).write(any(), any(), any(), any());
+    ArgumentCaptor<Object> payloadCaptor = ArgumentCaptor.forClass(Object.class);
+    verify(outboxEventWriter).write(any(), any(), any(), payloadCaptor.capture());
+    assertThat(((LoanListedPayload) payloadCaptor.getValue()).getPurpose()).isEqualTo("BUSINESS");
   }
 
   @Test

@@ -34,6 +34,9 @@ CREATE DATABASE kyc_db OWNER kyc_service;
 
 CREATE ROLE loan_service LOGIN PASSWORD 'local-dev-only-password';
 CREATE DATABASE loan_db OWNER loan_service;
+
+CREATE ROLE marketplace_service LOGIN PASSWORD 'local-dev-only-password';
+CREATE DATABASE marketplace_db OWNER marketplace_service;
 SQL
 ```
 
@@ -113,4 +116,14 @@ funding, disbursement or repayment yet — see docs/adr/0015-loan-service-phase-
 
 ```
 SPRING_PROFILES_ACTIVE=local ./mvnw -pl services/loan-service -am spring-boot:run
+```
+
+Run marketplace-service (listens on 8095; needs authentication-service for JWKS and loan-service
+running first so there's a `loan.listed` event to consume — it builds its listings read model
+entirely from Kafka, no synchronous calls to any other service). Phase 1 only: no risk grade,
+trust-tier badges, direct offers or commitments yet — see
+docs/adr/0016-marketplace-service-phase-1-scope.md:
+
+```
+SPRING_PROFILES_ACTIVE=local ./mvnw -pl services/marketplace-service -am spring-boot:run
 ```
