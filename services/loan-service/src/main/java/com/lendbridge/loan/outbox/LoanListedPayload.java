@@ -18,5 +18,6 @@ public class LoanListedPayload {
   private long amountKobo;
   private int interestRateBps;
   private int tenorMonths;
+  private String purpose;
   private long occurredAtEpochMillis;
 }

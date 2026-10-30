@@ -9,6 +9,7 @@
     {"name": "amountKobo", "type": "long"},
     {"name": "interestRateBps", "type": "int"},
     {"name": "tenorMonths", "type": "int"},
+    {"name": "purpose", "type": "string"},
     {"name": "occurredAtEpochMillis", "type": "long"}
   ]
 }
