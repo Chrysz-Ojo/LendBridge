@@ -4,14 +4,17 @@ import com.lendbridge.starter.dto.ApiResponse;
 import com.lendbridge.starter.exception.DependencyUnavailableException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -26,11 +29,18 @@ import org.springframework.web.context.request.ServletRequestAttributes;
  * {@code spring-boot-starter-web} already on the classpath. Still wrapped in
  * {@code @CircuitBreaker}/{@code @Retry} exactly like the Feign-based gateways, since those
  * annotations are AOP on the Spring bean method, not Feign-specific.
+ *
+ * <p>The multipart body is built by hand rather than with {@code MultipartBodyBuilder}: that
+ * class's {@code part(...)} checks {@code instanceof org.springframework.http.codec.multipart.Part}
+ * internally, and loading that (reactive-world) interface requires {@code reactive-streams} on the
+ * classpath even for this purely synchronous use — a dependency this module deliberately doesn't
+ * carry (same reasoning as skipping {@code feign-form} above).
  */
 @Component
 public class DocumentUploadClient {
 
   private static final Logger log = LoggerFactory.getLogger(DocumentUploadClient.class);
+  private static final String BOUNDARY_PREFIX = "LendBridgeBoundary";
 
   private final RestClient restClient;
 
@@ -42,17 +52,8 @@ public class DocumentUploadClient {
   @CircuitBreaker(name = "documentService", fallbackMethod = "uploadFallback")
   @Retry(name = "documentService")
   public DocumentUploadResponse uploadAgreement(byte[] pdfBytes, String filename) {
-    MultipartBodyBuilder multipart = new MultipartBodyBuilder();
-    multipart
-        .part(
-            "file",
-            new ByteArrayResource(pdfBytes) {
-              @Override
-              public String getFilename() {
-                return filename;
-              }
-            })
-        .contentType(MediaType.APPLICATION_PDF);
+    String boundary = BOUNDARY_PREFIX + UUID.randomUUID();
+    byte[] body = multipartBody(boundary, filename, pdfBytes);
 
     RestClient.RequestBodySpec request =
         restClient
@@ -60,12 +61,27 @@ public class DocumentUploadClient {
             .uri(
                 uriBuilder ->
                     uriBuilder.path("/api/v1/documents").queryParam("documentType", "LOAN_AGREEMENT").build())
-            .contentType(MediaType.MULTIPART_FORM_DATA);
+            .contentType(MediaType.valueOf("multipart/form-data; boundary=" + boundary));
     forwardAuthorization(request);
 
-    ApiResponse<DocumentUploadResponse> response =
-        request.body(multipart.build()).retrieve().body(new ParameterizedTypeReference<>() {});
+    ApiResponse<DocumentUploadResponse> response = request.body(body).retrieve().body(new ParameterizedTypeReference<>() {});
     return response.getData();
+  }
+
+  private byte[] multipartBody(String boundary, String filename, byte[] pdfBytes) {
+    try {
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      out.write(("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8));
+      out.write(
+          ("Content-Disposition: form-data; name=\"file\"; filename=\"" + filename + "\"\r\n")
+              .getBytes(StandardCharsets.UTF_8));
+      out.write("Content-Type: application/pdf\r\n\r\n".getBytes(StandardCharsets.UTF_8));
+      out.write(pdfBytes);
+      out.write(("\r\n--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
+      return out.toByteArray();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 
   private void forwardAuthorization(RestClient.RequestBodySpec request) {

@@ -79,7 +79,7 @@ class LoanServiceImplTest {
 
     assertThat(response.getStatus()).isEqualTo(LoanStatus.DRAFT);
     assertThat(response.getSchedule().getInstalments()).hasSize(12);
-    verify(repository).save(any(LoanApplication.class));
+    verify(repository).saveAndFlush(any(LoanApplication.class));
   }
 
   @Test
@@ -115,7 +115,7 @@ class LoanServiceImplTest {
   @Test
   void create_duplicateOpenRequest_mapsConstraintViolationToConflict() {
     when(kycGateway.fetchMyStatus()).thenReturn(new KycStatusResponse("VERIFIED", "TIER_2"));
-    when(repository.save(any())).thenThrow(new DataIntegrityViolationException("duplicate"));
+    when(repository.saveAndFlush(any())).thenThrow(new DataIntegrityViolationException("duplicate"));
 
     assertThatThrownBy(() -> service.create(UUID.randomUUID(), request(1_000_000L, 12, 1800)))
         .isInstanceOf(ConflictException.class);

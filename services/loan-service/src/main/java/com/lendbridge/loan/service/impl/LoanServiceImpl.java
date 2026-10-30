@@ -114,7 +114,7 @@ public class LoanServiceImpl implements LoanService {
             .updatedAt(now)
             .build();
     try {
-      loanApplicationRepository.save(loan);
+      loanApplicationRepository.saveAndFlush(loan);
     } catch (DataIntegrityViolationException e) {
       throw new ConflictException("LOAN_OPEN_REQUEST_EXISTS", "You already have an open loan request");
     }
