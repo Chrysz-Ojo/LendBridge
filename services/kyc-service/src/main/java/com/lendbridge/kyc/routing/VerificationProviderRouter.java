@@ -56,12 +56,6 @@ public class VerificationProviderRouter {
     return new RoutedCheckResult(primary, provider(primary).checkBvn(request));
   }
 
-  // Invoked reflectively by Resilience4j as checkBvn's fallback at runtime; package-private (not
-  // private) so VerificationProviderRouterTest can also call it directly — Resilience4j's
-  // annotation-driven circuit breaker only triggers via a Spring AOP proxy, which a plain
-  // `new VerificationProviderRouter(...)` unit test never has (same reason payment-service's own
-  // PaymentProviderRouterTest never exercises its fallback through the annotated entry point
-  // either), so the fallback/secondary-routing/both-down logic is tested by calling it directly.
   RoutedCheckResult checkBvnFallback(BvnCheckRequest request, Throwable cause) {
     log.warn("Primary KYC provider {} failed for BVN check, falling back to secondary {}", primary, secondary, cause);
     try {
