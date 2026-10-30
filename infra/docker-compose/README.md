@@ -6,6 +6,38 @@ Postgres, Kafka, Schema Registry, Redis and LocalStack (S3) for running services
 docker compose -f infra/docker-compose/docker-compose.yml up -d
 ```
 
+The Postgres container only auto-creates one database/role via its env vars:
+`authentication_db` / `authentication_service`. Every other service owns its own database
+(CLAUDE.md: "Each service owns its database"), so its role and database need to be created once,
+by hand, before that service will start — each one in `application-local.yml` has the pattern
+`<service>_db` / `<service>_service`, password `local-dev-only-password`:
+
+```
+docker exec -i docker-compose-postgres-1 psql -U authentication_service -d postgres <<'SQL'
+CREATE ROLE document_service LOGIN PASSWORD 'local-dev-only-password';
+CREATE DATABASE document_db OWNER document_service;
+
+CREATE ROLE ledger_service LOGIN PASSWORD 'local-dev-only-password';
+CREATE DATABASE ledger_db OWNER ledger_service;
+
+CREATE ROLE payment_service LOGIN PASSWORD 'local-dev-only-password';
+CREATE DATABASE payment_db OWNER payment_service;
+
+CREATE ROLE user_profile_service LOGIN PASSWORD 'local-dev-only-password';
+CREATE DATABASE user_profile_db OWNER user_profile_service;
+
+CREATE ROLE wallet_service LOGIN PASSWORD 'local-dev-only-password';
+CREATE DATABASE wallet_db OWNER wallet_service;
+
+CREATE ROLE kyc_service LOGIN PASSWORD 'local-dev-only-password';
+CREATE DATABASE kyc_db OWNER kyc_service;
+SQL
+```
+
+Add the same two lines for any new service's database as it's added. If you have a local Postgres
+of your own (Postgres.app, Homebrew, etc.) also listening on 5432, stop it first — the container
+above binds the same host port.
+
 Run authentication-service against it:
 
 ```
@@ -36,4 +68,38 @@ on startup, nothing to set up by hand:
 
 ```
 SPRING_PROFILES_ACTIVE=local ./mvnw -pl services/document-service -am spring-boot:run
+```
+
+Run ledger-service (listens on 8090; needs authentication-service for JWKS):
+
+```
+SPRING_PROFILES_ACTIVE=local ./mvnw -pl services/ledger-service -am spring-boot:run
+```
+
+Run wallet-service (listens on 8091; needs authentication-service for JWKS, ledger-service for
+balances, and Redis for the ledger-balance cache — bring ledger-service up first, since wallet
+balances are derived from it):
+
+```
+SPRING_PROFILES_ACTIVE=local ./mvnw -pl services/wallet-service -am spring-boot:run
+```
+
+Run payment-service (listens on 8092; needs authentication-service for JWKS and wallet-service for
+top-ups/withdrawals — bring wallet-service up first). Real PSP calls (Paystack, Flutterwave,
+Monnify) are disabled locally by default (`payment.provider.primary`/`secondary` default to
+`fake`); set the relevant `PAYSTACK_*`/`FLUTTERWAVE_*`/`MONNIFY_*` env vars and provider names to
+exercise a real adapter:
+
+```
+SPRING_PROFILES_ACTIVE=local ./mvnw -pl services/payment-service -am spring-boot:run
+```
+
+Run kyc-service (listens on 8093; needs authentication-service for JWKS and document-service for
+fetching the uploaded ID card/selfie/bank-statement documents it verifies). Real BVN/NIN/liveness
+calls (Smile Identity, Dojah, Prembly) are disabled locally by default
+(`kyc.provider.primary`/`secondary` default to `fake`); see the commented-out block in
+`application-local.yml` for how to switch one on once API keys are issued:
+
+```
+SPRING_PROFILES_ACTIVE=local ./mvnw -pl services/kyc-service -am spring-boot:run
 ```
