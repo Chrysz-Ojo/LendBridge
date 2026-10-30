@@ -72,14 +72,6 @@
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <!-- Test-only: signs fake JWTs against a stub JWKS endpoint standing in for
-           authentication-service. Already an approved stack dependency (authentication-service
-           uses it to issue real tokens), not a new library. -->
-      <groupId>com.nimbusds</groupId>
-      <artifactId>nimbus-jose-jwt</artifactId>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
   <build>
