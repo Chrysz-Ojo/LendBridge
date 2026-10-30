@@ -83,13 +83,14 @@ class CommitmentControllerIT extends AbstractIntegrationTest {
   @Test
   void createThenCancel_releasesTheHold() throws Exception {
     UUID loanId = seedActiveLoanListing(1_000_000L);
+    UUID lenderId = UUID.randomUUID();
     int releasedBefore = WALLET_STUB.holdsReleased();
 
     String created =
         mockMvc
             .perform(
                 post("/api/v1/investment/loans/" + loanId + "/commitments")
-                    .with(jwt().jwt(j -> j.subject(UUID.randomUUID().toString())))
+                    .with(jwt().jwt(j -> j.subject(lenderId.toString())))
                     .header("Idempotency-Key", "commit-key-4")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{\"amountKobo\":600000}"))
@@ -102,11 +103,36 @@ class CommitmentControllerIT extends AbstractIntegrationTest {
     mockMvc
         .perform(
             delete("/api/v1/investment/commitments/" + commitmentId)
-                .with(jwt().jwt(j -> j.subject(UUID.randomUUID().toString()))))
+                .with(jwt().jwt(j -> j.subject(lenderId.toString()))))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.data.status", org.hamcrest.Matchers.equalTo("CANCELLED")));
 
     assertThat(WALLET_STUB.holdsReleased()).isEqualTo(releasedBefore + 1);
+  }
+
+  @Test
+  void cancel_byADifferentLender_returnsNotFound() throws Exception {
+    UUID loanId = seedActiveLoanListing(1_000_000L);
+
+    String created =
+        mockMvc
+            .perform(
+                post("/api/v1/investment/loans/" + loanId + "/commitments")
+                    .with(jwt().jwt(j -> j.subject(UUID.randomUUID().toString())))
+                    .header("Idempotency-Key", "commit-key-6")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"amountKobo\":600000}"))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    String commitmentId = com.jayway.jsonpath.JsonPath.read(created, "$.data.id");
+
+    mockMvc
+        .perform(
+            delete("/api/v1/investment/commitments/" + commitmentId)
+                .with(jwt().jwt(j -> j.subject(UUID.randomUUID().toString()))))
+        .andExpect(status().isNotFound());
   }
 
   @Test
