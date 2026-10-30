@@ -13,13 +13,20 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 class ReviewControllerIT extends AbstractIntegrationTest {
+
+  private static final GrantedAuthority KYC_OFFICER_AUTHORITY =
+      new SimpleGrantedAuthority("ROLE_KYC_OFFICER");
 
   @Test
   void getQueue_rejectsACallerWithoutTheKycOfficerRole() throws Exception {
     mockMvc
-        .perform(get("/api/v1/kyc/review/queue").with(jwt().jwt(j -> j.subject(UUID.randomUUID().toString()))))
+        .perform(
+            get("/api/v1/kyc/review/queue")
+                .with(jwt().jwt(j -> j.subject(UUID.randomUUID().toString()))))
         .andExpect(status().isForbidden());
   }
 
@@ -65,14 +72,26 @@ class ReviewControllerIT extends AbstractIntegrationTest {
     mockMvc
         .perform(
             get("/api/v1/kyc/review/queue")
-                .with(jwt().jwt(j -> j.subject(UUID.randomUUID().toString()).claim("roles", List.of("KYC_OFFICER")))))
+                .with(
+                    jwt()
+                        .jwt(
+                            j ->
+                                j.subject(UUID.randomUUID().toString())
+                                    .claim("roles", List.of("KYC_OFFICER")))
+                        .authorities(KYC_OFFICER_AUTHORITY)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.data[?(@.id == '" + caseId + "')]").exists());
 
     mockMvc
         .perform(
             post("/api/v1/kyc/review/" + caseId + "/decision")
-                .with(jwt().jwt(j -> j.subject(UUID.randomUUID().toString()).claim("roles", List.of("KYC_OFFICER"))))
+                .with(
+                    jwt()
+                        .jwt(
+                            j ->
+                                j.subject(UUID.randomUUID().toString())
+                                    .claim("roles", List.of("KYC_OFFICER")))
+                        .authorities(KYC_OFFICER_AUTHORITY))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"decision\":\"APPROVE\"}"))
         .andExpect(status().isOk())
@@ -111,7 +130,13 @@ class ReviewControllerIT extends AbstractIntegrationTest {
     mockMvc
         .perform(
             post("/api/v1/kyc/review/" + caseId + "/decision")
-                .with(jwt().jwt(j -> j.subject(UUID.randomUUID().toString()).claim("roles", List.of("KYC_OFFICER"))))
+                .with(
+                    jwt()
+                        .jwt(
+                            j ->
+                                j.subject(UUID.randomUUID().toString())
+                                    .claim("roles", List.of("KYC_OFFICER")))
+                        .authorities(KYC_OFFICER_AUTHORITY))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"decision\":\"REJECT\"}"))
         .andExpect(status().isBadRequest());
@@ -119,7 +144,13 @@ class ReviewControllerIT extends AbstractIntegrationTest {
     mockMvc
         .perform(
             post("/api/v1/kyc/review/" + caseId + "/decision")
-                .with(jwt().jwt(j -> j.subject(UUID.randomUUID().toString()).claim("roles", List.of("KYC_OFFICER"))))
+                .with(
+                    jwt()
+                        .jwt(
+                            j ->
+                                j.subject(UUID.randomUUID().toString())
+                                    .claim("roles", List.of("KYC_OFFICER")))
+                        .authorities(KYC_OFFICER_AUTHORITY))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"decision\":\"REJECT\",\"reason\":\"fraudulent documents\"}"))
         .andExpect(status().isOk())
