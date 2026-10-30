@@ -1,6 +1,8 @@
 package com.lendbridge.loan.support;
 
 import com.lendbridge.loan.repository.LoanApplicationRepository;
+import java.security.SecureRandom;
+import java.util.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,6 +23,8 @@ import org.testcontainers.utility.DockerImageName;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 public abstract class AbstractIntegrationTest {
+
+  private static final String FIELD_ENCRYPTION_KEY = randomBase64Key();
 
   static final PostgreSQLContainer<?> POSTGRES =
       new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"))
@@ -65,6 +69,7 @@ public abstract class AbstractIntegrationTest {
         "spring.kafka.producer.properties.schema.registry.url",
         () -> "http://" + SCHEMA_REGISTRY.getHost() + ":" + SCHEMA_REGISTRY.getMappedPort(8081));
 
+    registry.add("platform.field-encryption.key", () -> FIELD_ENCRYPTION_KEY);
     registry.add("platform.outbox.relay-interval-ms", () -> "500");
     registry.add("platform.outbox.ce-source", () -> "lendbridge://loan-service");
 
@@ -80,6 +85,12 @@ public abstract class AbstractIntegrationTest {
     registry.add("loan.trust-tier.tier3-limit-kobo", () -> "500000000");
     registry.add("loan.listing.expiry-days", () -> "14");
     registry.add("loan.agreement.template-version", () -> "1");
+  }
+
+  private static String randomBase64Key() {
+    byte[] key = new byte[32];
+    new SecureRandom().nextBytes(key);
+    return Base64.getEncoder().encodeToString(key);
   }
 
   @Autowired protected MockMvc mockMvc;

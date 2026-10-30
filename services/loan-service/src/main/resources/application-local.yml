@@ -6,3 +6,7 @@ spring:
     url: jdbc:postgresql://localhost:5432/loan_db
     username: loan_service
     password: local-dev-only-password
+
+platform:
+  field-encryption:
+    key: UkcAB2X6vvEm84Es0aKFPSHnM1pclzsw9WkyoAD43H4=
