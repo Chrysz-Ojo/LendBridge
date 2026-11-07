@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
  * external-provider rule).
  */
 @Component
+@ConditionalOnProperty(name = "auth.email.provider", havingValue = "fake", matchIfMissing = true)
 public class FakeEmailSender implements EmailSender {
 
   private static final Logger log = LoggerFactory.getLogger(FakeEmailSender.class);

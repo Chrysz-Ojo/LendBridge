@@ -12,6 +12,7 @@ import com.lendbridge.starter.exception.NotFoundException;
 import com.lendbridge.authentication.model.User;
 import com.lendbridge.authentication.repository.UserJpaRepository;
 import com.lendbridge.authentication.service.OtpService;
+import com.lendbridge.authentication.dto.OtpIssueRequest;
 import com.lendbridge.authentication.model.OtpPurpose;
 import java.time.Instant;
 import java.util.UUID;
@@ -34,7 +35,7 @@ public class SmsMfaServiceImpl implements SmsMfaService {
         userRepository
             .findById(userId)
             .orElseThrow(() -> new NotFoundException("USER_NOT_FOUND", "User not found"));
-    otpService.issue(userId, OtpPurpose.MFA_SMS, user.getPhone());
+    otpService.issue(userId, OtpIssueRequest.builder().purpose(OtpPurpose.MFA_SMS).destinationPhone(user.getPhone()).build());
   }
 
   @Override

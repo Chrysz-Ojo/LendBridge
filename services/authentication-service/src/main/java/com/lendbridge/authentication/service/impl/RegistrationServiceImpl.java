@@ -28,6 +28,7 @@ import com.lendbridge.authentication.model.User;
 import com.lendbridge.authentication.model.UserStatus;
 import com.lendbridge.authentication.repository.UserJpaRepository;
 import com.lendbridge.authentication.service.OtpService;
+import com.lendbridge.authentication.dto.OtpIssueRequest;
 import com.lendbridge.authentication.model.OtpPurpose;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -102,7 +103,9 @@ public class RegistrationServiceImpl implements RegistrationService {
     recordConsent(user.getId(), ConsentType.TERMS_OF_SERVICE, TERMS_VERSION, now);
     recordConsent(user.getId(), ConsentType.PRIVACY_POLICY, PRIVACY_VERSION, now);
 
-    otpService.issue(user.getId(), OtpPurpose.PHONE_VERIFICATION, phone.getValue());
+    otpService.issue(
+        user.getId(),
+        OtpIssueRequest.builder().purpose(OtpPurpose.PHONE_VERIFICATION).destinationPhone(phone.getValue()).build());
 
     String rawToken = opaqueTokenGenerator.generateRaw();
     EmailVerificationToken token =

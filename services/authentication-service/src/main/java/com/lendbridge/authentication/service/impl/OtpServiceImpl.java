@@ -3,8 +3,10 @@ package com.lendbridge.authentication.service.impl;
 import com.lendbridge.authentication.service.OtpService;
 
 import com.lendbridge.authentication.crypto.OpaqueTokenGenerator;
+import com.lendbridge.authentication.dto.OtpIssueRequest;
 import com.lendbridge.starter.crypto.UuidV7;
 import com.lendbridge.starter.exception.BadRequestException;
+import com.lendbridge.authentication.notification.EmailSender;
 import com.lendbridge.authentication.notification.SmsSender;
 import com.lendbridge.authentication.model.OtpChallenge;
 import com.lendbridge.authentication.model.OtpPurpose;
@@ -26,14 +28,27 @@ public class OtpServiceImpl implements OtpService {
   private static final long TTL_MINUTES = 5;
   private static final int MAX_ATTEMPTS = 5;
 
+  private static final String SMS_MESSAGE = "Your LendBridge verification code is %s";
+  private static final String EMAIL_SUBJECT = "Your LendBridge verification code";
+  private static final String EMAIL_BODY = "Your verification code is %s. It expires in " + TTL_MINUTES + " minutes.";
+
   private final OtpChallengeRepository repository;
   private final OpaqueTokenGenerator opaqueTokenGenerator;
   private final SmsSender smsSender;
+  private final EmailSender emailSender;
   private final SecureRandom secureRandom = new SecureRandom();
 
   @Override
   @Transactional
-  public void issue(UUID userId, OtpPurpose purpose, String destinationPhone) {
+  public void issue(UUID userId, OtpIssueRequest request) {
+    String code = createChallenge(userId, request.getPurpose());
+    smsSender.send(request.getDestinationPhone(), SMS_MESSAGE.formatted(code));
+    if (request.getDestinationEmail() != null) {
+      emailSender.send(request.getDestinationEmail(), EMAIL_SUBJECT, EMAIL_BODY.formatted(code));
+    }
+  }
+
+  private String createChallenge(UUID userId, OtpPurpose purpose) {
     String code = generateNumericCode();
     OtpChallenge challenge =
         OtpChallenge.builder()
@@ -47,16 +62,14 @@ public class OtpServiceImpl implements OtpService {
             .createdAt(Instant.now())
             .build();
     repository.save(challenge);
-    smsSender.send(destinationPhone, "Your LendBridge verification code is " + code);
+    return code;
   }
 
   @Override
   @Transactional
   public void verify(UUID userId, OtpPurpose purpose, String code) {
-    List<OtpChallenge> challenges =
-        repository.findByUserIdAndPurposeOrderByCreatedAtDesc(userId, purpose);
-    OtpChallenge latest =
-        challenges.stream()
+    List<OtpChallenge> challenges = repository.findByUserIdAndPurposeOrderByCreatedAtDesc(userId, purpose);
+    OtpChallenge latest = challenges.stream()
             .filter(c -> !c.isConsumed())
             .findFirst()
             .orElseThrow(() -> new BadRequestException("OTP_NOT_FOUND", "No active OTP challenge"));

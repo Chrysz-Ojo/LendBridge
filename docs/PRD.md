@@ -1,6 +1,6 @@
 # LendBridge — Product Requirements Document (Microservices, v2.0)
 
-Oct 21, 2026 · @Noah
+Oct 21, 2026 · @Btwice
 
 ## 1. Document control and executive summary
 
@@ -10,11 +10,7 @@ LendBridge v2.0 rebuilds the completed MVP as a production-grade, event-driven m
 | --- | --- |
 | Product | LendBridge: peer-to-peer (P2P) lending platform |
 | Version | 2.0 (microservices re-platform of the MVP) |
-| Product Manager | Abdullahi Fariu-Arebi |
-| Product Designer | Godswill Desmond |
-| Platforms | Web (responsive) at launch; mobile apps reuse the same public APIs later |
-| Primary market | Nigeria (BVN-based identity, NGN wallets) |
-| Related artefacts | Concept notes, design flows, system architecture, engineering Jira board |
+
 
 ### Executive summary
 
@@ -95,6 +91,11 @@ Success means a borrower is verified and listed in under 10 minutes, funded in u
 - Who carries default risk: lenders only, or is there a provision fund?
 - Fee model: borrower origination fee, lender service fee on interest, or both?
 - Payment and KYC vendors: final choice after commercial review (candidates are listed in section 7).
+- Withholding tax on lender interest income: rate, deduction point and remittance process. Tax adviser to confirm before launch.
+- VAT treatment of platform fees (origination and/or service fee). Tax adviser to confirm before launch.
+- Whether LendBridge reports borrower repayment behaviour to a credit bureau (CRC/FirstCentral), and whether that's a condition of the chosen licence route.
+
+See section 10 for the full fintech capability gap analysis these questions feed into.
 
 ## 3. Personas and end-to-end journeys
 
@@ -144,7 +145,7 @@ One account can hold both lender and borrower roles. The role chosen at onboardi
 
 ## 4. Functional requirements
 
-The platform delivers 11 epics: the 8 MVP epics for lenders and borrowers, plus 3 platform epics (identity, wallet and payments, admin) that the MVP left implicit. Priority: P0 = launch blocker, P1 = launch target, P2 = fast follow. Each story names the service that owns it (section 5).
+The platform delivers 16 epics: the 8 MVP epics for lenders and borrowers, plus collections, restructuring and withholding tax (E14–E16 — loan-servicing and money epics closely tied to E8) and 5 platform epics (identity, wallet and payments, admin, transaction security, device trust) that the MVP left implicit. Priority: P0 = launch blocker, P1 = launch target, P2 = fast follow. Each story names the service that owns it (section 5).
 
 ### E1. Account and authentication (both roles)
 
@@ -174,7 +175,7 @@ The platform delivers 11 epics: the 8 MVP epics for lenders and borrowers, plus 
 | E3-S2 | As a lender, I want to browse loan listings that match my preferences. | Listing shows amount, amount funded so far, interest rate, tenor, purpose, risk grade, trust level; filter and sort by each; default view = matches for active preferences. | P0 | Marketplace |
 | E3-S3 | As a lender, I want to diversify across many loans. | Minimum ticket configurable (default ₦5,000); maximum exposure to one borrower configurable (default 20% of lender's portfolio); portfolio shows spread by grade and tenor. | P0 | Investment |
 | E3-S4 | As a lender, I want auto-invest to fund matching loans for me. | Opt-in per preference set; invests only while wallet balance covers the ticket; every auto-investment is logged and notified; pausable anytime. | P1 | Investment |
-| E3-S5 | As a lender, I want to monitor my investments and earnings. | For each active loan: total amount, my share, interest rate, amount repaid, duration, number of repayments, late, missed and on-time payments; portfolio totals: invested, outstanding, interest earned, fees, net return. | P0 | Investment |
+| E3-S5 | As a lender, I want to monitor my investments and earnings. | For each active loan: total amount, my share, interest rate, amount repaid, duration, number of repayments, late, missed and on-time payments; portfolio totals: invested, outstanding, interest earned, fees, tax withheld (E16, once enabled), net return. | P0 | Investment |
 
 ### E4. Lender: loan selection and funding
 
@@ -252,7 +253,97 @@ The platform delivers 11 epics: the 8 MVP epics for lenders and borrowers, plus 
 | E11-S3 | As finance, I want refunds and reversals with approval. | Maker-checker: one admin raises, a different admin approves. | P0 | Admin, Payment |
 | E11-S4 | As an admin, I want a full audit trail. | Every admin action and every state change on users, loans and money recorded immutably with actor, time, before and after. | P0 | Audit |
 | E11-S5 | As management, I want reports. | Loan book, disbursements, repayments, defaults by grade, user growth, revenue; CSV export. | P1 | Reporting |
-| E11-S6 | As an admin, I want role-based access. | Roles: Super admin, KYC officer, Risk officer, Finance, Support; least privilege enforced per endpoint. | P0 | Authentication |
+| E11-S6 | As an admin, I want role-based access. | Roles: Super admin, KYC officer, Risk officer, Finance, Support, Collections officer (E14); least privilege enforced per endpoint. | P0 | Authentication |
+
+### E12. Transaction PIN (both roles)
+
+A transaction PIN is a separate, lightweight credential from the login password: Nigerian users
+expect one, and it confirms day-to-day money movements without the cost and friction of an SMS
+OTP for every action. It complements, not replaces, the 2FA rule in E1-S3 — 2FA stays mandatory
+for the specific high-risk actions E1-S3 already names (withdrawal, bank-account change, first
+investment); the PIN is required in addition, and on every money-moving action, not only those.
+
+| ID | User story | Acceptance criteria | Priority | Service |
+| --- | --- | --- | --- | --- |
+| E12-S1 | As a user, I want to set a transaction PIN separate from my password, so I can quickly confirm money movements. | 4–6 digit PIN (length configurable); must be set before the user's first money-moving action; rejects obvious patterns (0000, 1234, repeated or sequential digits) with a clear error; stored as a salted hash, same as the password, never logged or returned in any API response; can only be set or changed from an authenticated, 2FA-verified session. | P0 | Authentication |
+| E12-S2 | As a user, I want to confirm every money-moving action with my transaction PIN. | PIN required before: wallet withdrawal, investment commitment or direct-offer funding, repayment paid from wallet balance, and bank-account/virtual-account changes; the initiating service (Wallet, Payment or Investment) verifies the PIN synchronously against Authentication before proceeding; a successful check is scoped to that one request only — no caching or skip window. | P0 | Authentication, Wallet, Payment, Investment |
+| E12-S3 | As a user, I want to change my transaction PIN, including when I've forgotten it. | Changing a known PIN requires the current PIN; a forgotten PIN requires full re-authentication (password + 2FA OTP, same rigor as E1-S4's password reset); unlike a password reset, other active sessions are not revoked, since the PIN is transaction-scoped, not session-scoped; the user is notified of the change. | P0 | Authentication |
+| E12-S4 | As the platform, I want repeated wrong PIN attempts locked out, so a stolen or unlocked device can't brute-force the PIN. | Lockout after 5 consecutive failed attempts within a rolling window (configurable, same default as E1-S2's login lockout) for 15 minutes; lockout blocks PIN-gated actions only, not login; the user is notified of the lockout. | P0 | Authentication |
+| E12-S5 | As an admin, I want visibility into transaction-PIN security events, so I can investigate suspicious activity. | PIN set, PIN changed, PIN-verification-failed and PIN-lockout events are recorded immutably with actor, time and the transaction type that triggered the check; the PIN value or hash never appears in any log or audit record. | P1 | Audit |
+
+### E13. Device binding (both roles)
+
+E1-S2 already fingerprints a device and sends an alert on a new-device login, but an alert alone
+doesn't stop a stolen session from moving money. Device binding turns that passive signal into an
+active gate: an unrecognized device can log in and browse, but can't perform any money-moving
+action until it's explicitly verified. Verification is separate from, and sits alongside, the
+transaction PIN (E12) and the existing 2FA rule (E1-S3) — this epic governs *which device* can
+transact; those two govern *how a transaction is confirmed* once the device is already trusted.
+
+| ID | User story | Acceptance criteria | Priority | Service |
+| --- | --- | --- | --- | --- |
+| E13-S1 | As a user, I want my own phone and browser recognized across sessions, so I'm not re-verified every time I log in from a device I already use. | A device fingerprint (hashed combination of device/browser signals; never a raw identifier beyond what verification needs) is recorded on every login; a device becomes "trusted" once it completes verification (E13-S2); trust is remembered for a configurable period (default 90 days), after which re-verification is required. | P0 | Authentication |
+| E13-S2 | As a user, I want to verify a new phone or browser before it can move my money. | Login from an unrecognized device succeeds and still triggers E1-S2's alert, but the device is marked untrusted; an untrusted device can view data but is blocked from any money-moving action (withdrawal, investment commitment, repayment, bank-account/virtual-account change) until verified; verification is a one-time OTP to the user's registered email or phone, distinct from the transaction PIN (E12); once verified, the device becomes trusted per E13-S1. | P0 | Authentication, Wallet, Payment, Investment |
+| E13-S3 | As a user, I want to see and manage the devices trusted on my account. | Settings page lists trusted devices (type and name parsed from user agent, first-seen date, last-used date, approximate location); the user can revoke trust on any device, which immediately requires that device to re-verify before it can transact again, and logs it out now if it's the current session. | P1 | Authentication |
+| E13-S4 | As the platform, I want a trusted device's status reduced automatically when its risk signals change materially, so a stolen but already-trusted device can't move money unchecked. | Trust is revoked and re-verification (E13-S2's OTP flow) is required when: IP geolocation jumps beyond a configurable distance/time threshold ("impossible travel"), the device's browser/OS fingerprint changes significantly, or a SIM-swap / phone-number-change signal is detected. | P2 | Authentication |
+| E13-S5 | As an admin, I want visibility into device-binding events, so I can investigate account-takeover attempts. | Device registration, verification, revocation, risk-triggered re-verification and failed-verification attempts are recorded immutably with actor, device fingerprint hash, time and trigger reason; no raw fingerprint or IP beyond what an investigation needs is exposed outside the admin audit view. | P1 | Audit |
+
+### E14. Collections workflow (borrower-facing, admin-operated)
+
+E8-S4 and E8-S5 already define the mechanics of lateness — reminders, a 3-day grace period, a late
+fee, and Defaulted status after 90 days past due. This epic defines what actually happens to a
+loan *during* that window: who contacts the borrower, how often, through which channels, and what
+gets logged, bounded by the FCCPC consumer-protection constraint already named in section 8 (no
+harassment, no contacting the borrower's personal contacts). **Out of scope**, per section 2:
+handoff to a third-party debt collector and automated legal recovery — this epic covers LendBridge's
+own in-house contact process only, ending in Repaid, Restructured (E15) or Written off.
+
+| ID | User story | Acceptance criteria | Priority | Service |
+| --- | --- | --- | --- | --- |
+| E14-S1 | As a collections officer, I want a queue of past-due and defaulted loans, so I know who to follow up with and when. | Queue lists loans past grace period or Defaulted, sorted by days-past-due; shows outstanding balance, trust tier, last contact outcome, and any active promise-to-pay; a loan with an active, not-yet-due promise-to-pay is excluded from the active-follow-up view. | P0 | Admin, Loan |
+| E14-S2 | As a collections officer, I want every contact attempt and its outcome logged. | Each attempt records channel (call, SMS, email, in-app), timestamp, officer, and outcome (no answer, promise to pay with a date, dispute raised, refused, paid); entries are immutable once saved — a correction is a new entry, not an edit, matching E11-S4's audit-trail model. | P0 | Admin, Loan |
+| E14-S3 | As the platform, I want automated collections contact bounded by consumer-protection limits, so outreach can't become harassment. | At most a configurable number of automated contacts per week per loan (default 3) across SMS, email and in-app combined; no automated contact outside 8am–7pm in the borrower's local time; the platform never collects or stores a borrower's personal contacts beyond their own verified phone and email, so contacting a "friend or family member" is impossible by design, not only by policy. | P0 | Loan, Notification |
+| E14-S4 | As a borrower, I want to log a promise to pay that pauses further follow-up. | A promise-to-pay (amount, date) can be recorded by the borrower or an officer on their behalf; while active and not yet past its date, the loan is excluded from E14-S1's active queue and E14-S3's automated contact; if the date passes unpaid, the loan returns to the queue at an escalated priority and the broken promise is visible in E14-S2's log. | P1 | Loan |
+| E14-S5 | As a risk or finance officer, I want every defaulted loan tracked to a resolution. | A Defaulted loan's case stays open until Repaid (recovered), Restructured back to Active (E15), or Written off; only a risk or finance officer can write off a case, with a reason logged; the decision is recorded immutably per E11-S4 and feeds the general-ledger/accounting export (section 10.1) once that capability exists. | P0 | Admin, Loan, Ledger |
+
+### E15. Loan restructuring (borrower-facing, admin-approved)
+
+A borrower in genuine difficulty needs an alternative to default: extending tenor or reducing the
+instalment, rather than riding the E14 collections process to Written off. Because lenders — not
+LendBridge — are the counterparty funding the loan, a restructuring changes what they're actually
+owed and when; this epic is approved by the platform (no per-lender vote, which isn't practical
+across a fractionally funded loan with many lenders), but it is never silent: every lender holding
+the loan is notified, and the restructuring stays permanently visible on the loan's history.
+Capped at one restructuring per loan, so hardship support can't become a way to indefinitely mask
+a loan that has, in substance, already defaulted.
+
+| ID | User story | Acceptance criteria | Priority | Service |
+| --- | --- | --- | --- | --- |
+| E15-S1 | As a borrower in financial difficulty, I want to request a restructuring, so I can keep repaying instead of defaulting. | Available from Active with at least one late or missed instalment, or from Defaulted, and not already restructured once; borrower states a reason and proposes a change (extend tenor, reduce instalment, or both); creates a pending request visible to risk/collections officers; only one open request per loan at a time. | P1 | Loan |
+| E15-S2 | As a risk or collections officer, I want to review and decide a restructuring request. | Officer sees the current schedule, the proposed change, payment history and risk grade; can approve (adjusting the exact final terms), reject, or request more information, with a reason logged, mirroring E11-S2; approval rebuilds the repayment schedule (outstanding principal, any accrued unpaid fees or interest per policy, new tenor, rate within the platform floor and cap from E6-S1) and returns the loan to Active, even if it was Defaulted. | P1 | Admin, Loan |
+| E15-S3 | As the platform, I want a loan limited to one restructuring. | A second request on an already-restructured loan is rejected outright with a clear reason, routing the borrower back toward E14's collections workflow or, ultimately, write-off. | P1 | Loan |
+| E15-S4 | As a lender, I want to be notified and see when a loan I've funded is restructured. | Every lender with an active holding on the loan is notified when a restructuring is approved, showing the old and new schedule side by side; the loan's listing and the lender's portfolio view (E3-S5, E5-S4) show a permanent "Restructured" badge and date; lender approval is not required, but disclosure is. | P1 | Loan, Investment, Notification |
+| E15-S5 | As management, I want restructured loans tracked separately in reporting. | Reports (E11-S5) break out restructured loans and their eventual outcome (Repaid, Defaulted again, or Written off) separately from loans that never restructured, so the published default rate (E5-S4) isn't understated by restructuring. | P2 | Reporting |
+
+### E16. Withholding tax on lender interest
+
+Whether this epic applies at all is still an open question (section 2): if lender interest is
+subject to Nigerian withholding tax, the platform needs to deduct, hold, remit and report it; if
+not, none of it should activate. So this epic builds the mechanism — toggle, rate, deduction
+point, remittance tracking, lender statement — entirely as configuration the tax adviser's answer
+switches on, never a hardcoded assumption. It sits at the exact point "Key business rules" already
+deducts the platform fee (fee → interest → principal, split pro rata to lenders, E8-S5): WHT comes
+out of the lender's interest share at the same payout step, never out of principal. This epic
+covers tax on what lenders earn only — VAT on the platform's own fee revenue is a different tax on
+a different base and stays a separate, still-open gap (section 10.4).
+
+| ID | User story | Acceptance criteria | Priority | Service |
+| --- | --- | --- | --- | --- |
+| E16-S1 | As the platform, I want a configurable withholding-tax switch and rate, so compliance can change without a deploy once confirmed. | WHT is off by default; when the tax adviser confirms it applies, Super admin enables it and sets the rate in the config table ("Key business rules"), with audit logging; the rate is configuration, never hardcoded. | P1 | Admin, Ledger |
+| E16-S2 | As a lender, I want withholding tax deducted transparently from my interest at payout, never from my principal. | WHT is calculated on the interest portion only, applied immediately after the platform fee and before crediting the lender's wallet (same step as E8-S5's allocation); the withheld amount posts to a dedicated WHT-payable ledger account, never commingled with platform revenue or a lender's wallet; the repayment-received notification and portfolio view (E3-S5) show interest earned, WHT withheld and net credited as three separate figures. | P1 | Ledger, Investment, Notification |
+| E16-S3 | As finance, I want to track and confirm remittance of withheld tax to the tax authority. | A periodic summary (configurable, default monthly) totals WHT withheld across all lenders for the period; finance records the remittance reference and date once paid, moving that period's balance from Withheld to Remitted; any unremitted period past its due date is flagged; feeds the general-ledger/accounting export (section 10.1) once built. | P1 | Admin, Ledger |
+| E16-S4 | As a lender, I want an annual tax statement showing my interest earned and tax withheld. | Generated once per tax year, and on demand for the current year to date; shows gross interest, platform fee, WHT withheld and net interest received, per month and as a year total; downloadable as a PDF, same generation pattern as E7-S3's agreement; retained per section 8's record-keeping requirement (≥5 years). | P1 | Investment, Document |
+| E16-S5 | As the platform, I want every WHT calculation, rate change and remittance recorded immutably, so it withstands a tax audit. | Each is recorded with actor, time and amount, consistent with E11-S4; a rate change never recalculates already-withheld amounts retroactively — it only applies going forward. | P2 | Audit |
 
 ### Loan lifecycle states
 
@@ -263,9 +354,9 @@ The platform delivers 11 epics: the 8 MVP epics for lenders and borrowers, plus 
 | Listed | Approved and visible in the marketplace | Funding, Expired, Cancelled |
 | Funding | First lender commitment received | Funded, Expired, Cancelled |
 | Funded | 100% (or accepted partial) funded, agreement pending | Active, Cancelled |
-| Active | Agreement signed and funds disbursed | Repaid, Defaulted |
+| Active | Agreement signed and funds disbursed | Repaid, Defaulted; loops back to itself with a revised schedule if a restructuring request is approved (E15) |
 | Repaid | Final instalment received | — (terminal) |
-| Defaulted | 90 days past due | Repaid (recovered), Written off |
+| Defaulted | 90 days past due | Repaid (recovered), Written off, or back to Active with a revised schedule if a restructuring request is approved (E15, capped at one restructuring per loan) |
 | Rejected, Expired, Cancelled, Written off | As named | — (terminal) |
 
 ### Key business rules
@@ -325,13 +416,13 @@ Each service owns its database and publishes its state changes as Kafka events t
 
 | Service | Datastore | Key entities |
 | --- | --- | --- |
-| Authentication | PostgreSQL | Users, credentials, roles, MFA, sessions |
+| Authentication | PostgreSQL | Users, credentials, roles, MFA, sessions, transaction PIN, trusted devices |
 | User Profile | PostgreSQL | Profile, employment, income, role flags, preferences |
 | KYC | PostgreSQL | Verification case, BVN result, NIN result, liveness result, trust tier |
 | Document | PostgreSQL + S3-compatible object storage | Document metadata, file pointer, checksum, scan status |
-| Loan | PostgreSQL | Loan request, agreement, repayment schedule, instalment, state history |
+| Loan | PostgreSQL | Loan request, agreement, repayment schedule, instalment, state history, collections contact log, promise-to-pay |
 | Marketplace | PostgreSQL + OpenSearch (read model) | Listing, offer, listing search index |
-| Investment | PostgreSQL | Preference set, commitment, holding, auto-invest rule |
+| Investment | PostgreSQL | Preference set, commitment, holding, auto-invest rule, withholding-tax record (E16) |
 | Risk | PostgreSQL | Risk assessment, grade, model version, feature snapshot |
 | Wallet | PostgreSQL + Redis (balance cache) | Wallet, hold, bank account, virtual account |
 | Ledger | PostgreSQL (append-only) | Account, journal entry, posting |
@@ -366,6 +457,7 @@ Common data rules:
 | payment.succeeded / payment.failed | Payment | Wallet, Loan, Notification, Ledger |
 | repayment.received | Loan | Investment, Ledger, Notification, Reporting |
 | loan.repaid / loan.defaulted | Loan | Investment, Risk, Notification, Reporting |
+| loan.restructured | Loan | Investment (holding/portfolio badge), Risk, Notification (lender transparency), Reporting (E15) |
 | message.sent | Messaging | Notification |
 | ticket.updated | Support | Notification |
 
@@ -640,3 +732,98 @@ Each gate is a go/no-go review with Product, Engineering, Risk and Legal; the cl
 | Microservices complexity slows the team | Medium | Medium | Shared platform starter library, templates, strong observability; start some services as modules in one deployable if headcount is short |
 | Liquidity imbalance: too few lenders | Medium | High | Lender acquisition campaigns, auto-invest, partial funding, possible institutional lender partners |
 | Data breach of PII | Low | Critical | Field-level encryption, least privilege, pen tests, incident response plan, breach notification within 72 hours |
+
+## 10. Fintech capability gap analysis and roadmap
+
+A lending fintech needs a set of capabilities beyond the 16 domain services that ordinary
+marketplace apps don't. This section audits what sections 1–9 already cover, what's only partly
+covered, and what's missing outright, organised the way the gaps would actually get built: as
+epics that extend the functional requirements in section 4, or as additions to section 8's
+regulatory/security controls. Status is graded against the current document, not aspiration:
+**✅ covered**, **⚠️ partly covered** (exists but incomplete), **⬜ gap** (not in the document),
+**Open question** (already tracked in section 2).
+
+### 10.1 Money safety
+
+| Capability | Status | Where this stands today | Suggested home |
+| --- | --- | --- | --- |
+| Double-entry ledger | ✅ | Ledger Service, append-only, debit = credit (section 6, 8) | — |
+| Idempotency | ✅ | Idempotency-Key header on every money-moving POST (section 6 API conventions, E10-S4) | — |
+| Daily reconciliation | ✅ | E10-S4; Payment Service's reconciliation run entity (section 6 data ownership) | — |
+| General ledger / accounting export | ⬜ gap | Nothing posts platform revenue, fees or escrow to an external accounting system (e.g. QuickBooks/Xero/SAP) | New story under E11 (Admin back-office) or a new Reporting Service export job |
+| Transaction PIN | ✅ specified | Now its own epic, E12 (section 4) | — |
+| Limits engine | ⚠️ partly | Limits exist per feature (E10-S3 daily withdrawal limits by trust tier; "Key business rules" config table) but there's no single engine evaluating all limit types together | Extend the "Key business rules" config table into a named capability, referenced from E1, E3, E10 |
+
+### 10.2 Fraud and risk
+
+| Capability | Status | Where this stands today | Suggested home |
+| --- | --- | --- | --- |
+| Velocity rules, device fingerprinting, duplicate BVN detection | ✅ | Section 8 Security controls; Risks table | — |
+| Device binding (new phone/browser verified before money moves) | ✅ specified | Now its own epic, E13 (section 4) | — |
+| Transaction monitoring for AML with a case queue | ⚠️ partly | Section 8 AML/CFT row names transaction monitoring and SARs, but there's no admin case queue like E11-S1/E11-S2's KYC/loan review queues | New story under E11, modelled on E11-S1 |
+| Sanctions and PEP screening | ⚠️ mentioned, not designed | Section 8 AML/CFT row names it at onboarding; periodic re-screening of existing users isn't specified | Extend E2 (KYC) with a recurring re-screening job |
+| Credit bureau reporting | ⬜ gap | E5-S1 only has lenders *reading* a credit bureau summary where consented; nothing *reports* borrower repayment behaviour back to CRC/FirstCentral | New story under E8 (Repayment and tracking); licence-route dependent (section 2 open question) |
+
+### 10.3 Collections and loan servicing
+
+| Capability | Status | Where this stands today | Suggested home |
+| --- | --- | --- | --- |
+| Reminders, grace period, late fee, default after 90 days | ✅ | E8-S4, E8-S5 | — |
+| Collections workflow (who contacts defaulters, when, consumer-protection limits) | ✅ specified | Now its own epic, E14 (section 4) | — |
+| Loan restructuring (extend tenor, reschedule) | ✅ specified | Now its own epic, E15 (section 4); loan lifecycle states updated with the Active/Defaulted → Active (restructured) transition | — |
+| Early payoff and statements | ⚠️ partly | Early payoff quote (E8-S2) and downloadable repayment statement (E8-S3) exist for borrowers; lenders have portfolio totals (E3-S5) but no downloadable statement | Extend E3-S5 and E8-S3 |
+| Write-offs and recoveries with accounting | ⚠️ partly | "Written off" and "Defaulted → Repaid (recovered)" exist as lifecycle states; the ledger/accounting treatment of a write-off isn't specified | Extend E8-S5 and the new GL export (10.1) |
+
+### 10.4 Tax and fees
+
+| Capability | Status | Where this stands today | Suggested home |
+| --- | --- | --- | --- |
+| Fee model (origination, service fee) | Open question | Section 2: "borrower origination fee, lender service fee on interest, or both?" | — |
+| Withholding tax on lender interest income | ✅ specified; still gated on the open question | Now its own epic, E16 (section 4), built entirely as configuration the tax adviser's answer switches on | — |
+| VAT on platform fees | ⬜ gap; open question | Not mentioned anywhere; added to section 2's open questions | Extend the fee model story |
+| Annual tax statements for lenders | ✅ specified | E16-S4 | — |
+
+### 10.5 Compliance and legal
+
+| Capability | Status | Where this stands today | Suggested home |
+| --- | --- | --- | --- |
+| Data protection (NDPA), consent, data requests | ✅ | Section 8 Regulatory table; E1-S1 consent versioning | — |
+| Licensing route | Open question | Section 2 | — |
+| Key facts disclosure (APR, total cost, standard format) | ⚠️ mentioned | Section 8 FCCPC row requires it; E6-S1 shows total repayment/instalment before submit, but no story defines a standard "key facts" document format | New story under E6 or E7 |
+| Complaints handling with tracked deadlines and escalation | ⚠️ partly | E9-S2 (support tickets) is the mechanism; section 8's FCCPC row requires timelines, but no story tracks deadlines or defines escalation | Extend E9-S2 |
+| Regulatory reports (periodic returns) | ⬜ gap | Not mentioned | New story under E11, likely owned by Reporting Service |
+| Legal documents, versioned | ⚠️ partly | Terms/privacy consent (E1-S1) and the loan agreement (E7-S3) are both versioned; lender risk disclosures are not | Extend E7-S3 |
+
+### 10.6 Customer trust and experience
+
+| Capability | Status | Where this stands today | Suggested home |
+| --- | --- | --- | --- |
+| Account statements (monthly, downloadable PDF) | ⬜ gap | Borrower repayment history is downloadable (E8-S3) but ad hoc, not a monthly statement; lenders have no downloadable statement at all | New story under E3 and E8 |
+| Dispute handling ("I paid but it's not showing") | ⚠️ partly | E9-S2 generic support tickets exist; no dedicated payment-dispute investigation workflow | New story under E9 or E10 |
+| Account closure and data export | ⚠️ partly | Section 8's NDPA row covers data-subject access/erasure requests generically; there's no explicit account-closure user story | New story under E2 or E9 |
+| Referral programme | ⬜ gap (optional) | Not mentioned | Candidate for a future epic, not launch-blocking |
+| Lender protection fund | Open question | Section 2: "who carries default risk... or is there a provision fund?" | — |
+
+### 10.7 Operations
+
+| Capability | Status | Where this stands today | Suggested home |
+| --- | --- | --- | --- |
+| Admin back-office with maker-checker | ✅ | E11-S3 | — |
+| Feature flags | ⬜ gap | Not mentioned; "Key business rules" covers business-limit config, not feature on/off switches | New entry in section 7 (Technology stack) and section 9 (CI/CD) |
+| Config and limits management with audit | ✅ | "Key business rules," section 4 | — |
+| Business continuity (PSP/bank outage) | ⚠️ partly | Risks table names the mitigation (adapter pattern, circuit breakers) at a technical level; no BC/DR runbook or RTO/RPO specific to a provider outage | Extend section 9 Observability and operations |
+| Status page for users during outages | ⬜ gap | Not mentioned | New entry in section 9 |
+| Error-message/i18n externalization | ⬜ gap | Section 8 NFR already states "text externalised for future languages," but every service today throws `ApiException` with a plain English message baked in at the throw site (no message key, no locale resolution). Real i18n means a message-key + `MessageSource`/resource-bundle change in `platform-starter`'s `ApiException`/`GlobalExceptionHandler`, which every one of the 16 services depends on — a platform-wide change, not a per-service one. Not needed for an English-only launch. | A dedicated ADR when a second launch language is actually planned; touches `platform-starter` |
+
+### Recommended pre-launch priorities
+
+Not every gap above blocks launch. In order of how likely each is to actually stop a launch:
+
+1. **Transaction PIN (E12) and device binding (E13)** — Nigerian users and reviewers expect both; missing either reads as a security gap, not a nice-to-have.
+2. **Collections workflow (E14)** — E8-S5's mechanics (grace period, late fee, default) exist, but without a defined, consumer-protection-compliant contact workflow, collections activity itself was a compliance risk (section 8 FCCPC row already bans harassment — E14 is the process that actually follows it).
+3. **Withholding tax on lender interest (E16)** — affects every funded loan from day one; needs a tax adviser's input before the fee model (section 2) can even be finalised. VAT on platform fees is a separate, still-open gap (section 10.4).
+4. **Statements** (borrower and lender) — low effort relative to the trust it buys; mostly a packaging exercise on data this document already specifies.
+5. **Credit bureau reporting** — likely a licence-route condition (section 2), so its priority is set by that decision, not by product preference.
+
+The licensing route (section 2) gates several of the above — Legal's input on it early in Phase 0
+determines how much of sections 10.2, 10.4 and 10.5 is mandatory versus optional at launch.

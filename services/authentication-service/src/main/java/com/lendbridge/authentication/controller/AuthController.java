@@ -19,6 +19,12 @@ import com.lendbridge.authentication.service.PasswordResetService;
 import com.lendbridge.authentication.dto.RoleAssignmentRequest;
 import com.lendbridge.authentication.dto.RoleListResponse;
 import com.lendbridge.authentication.service.RoleAssignmentService;
+import com.lendbridge.authentication.dto.ChangePinRequest;
+import com.lendbridge.authentication.dto.PinResetChallengeRequest;
+import com.lendbridge.authentication.dto.PinResetVerifyRequest;
+import com.lendbridge.authentication.dto.SetPinRequest;
+import com.lendbridge.authentication.dto.VerifyPinRequest;
+import com.lendbridge.authentication.service.PinService;
 import com.lendbridge.authentication.dto.RegisterRequest;
 import com.lendbridge.authentication.dto.VerifyEmailRequest;
 import com.lendbridge.authentication.dto.VerifyPhoneRequest;
@@ -51,6 +57,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -69,6 +76,7 @@ public class AuthController {
   private final SmsMfaService smsMfaService;
   private final PasswordResetService passwordResetService;
   private final RoleAssignmentService roleAssignmentService;
+  private final PinService pinService;
   private final UserJpaRepository userRepository;
   private final UserMapper userMapper;
   private final JwtKeyProvider jwtKeyProvider;
@@ -178,6 +186,48 @@ public class AuthController {
       smsMfaService.disable(CurrentUser.idFrom(authentication));
     }
     return ResponseEntity.ok(ApiResponse.success(MessageResponse.of(method + " MFA disabled")));
+  }
+
+  // ---- transaction PIN ----
+
+  @PostMapping("/api/v1/auth/pin")
+  public ResponseEntity<ApiResponse<MessageResponse>> setPin(
+      @Valid @RequestBody SetPinRequest request, Authentication authentication) {
+    pinService.setPin(CurrentUser.idFrom(authentication), request);
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(ApiResponse.success(MessageResponse.of("Transaction PIN set")));
+  }
+
+  @PutMapping("/api/v1/auth/pin")
+  public ResponseEntity<ApiResponse<MessageResponse>> changePin(
+      @Valid @RequestBody ChangePinRequest request, Authentication authentication) {
+    pinService.changePin(CurrentUser.idFrom(authentication), request);
+    return ResponseEntity.ok(ApiResponse.success(MessageResponse.of("Transaction PIN changed")));
+  }
+
+  @PostMapping("/api/v1/auth/pin/reset/challenge")
+  public ResponseEntity<ApiResponse<MessageResponse>> challengePinReset(
+      @Valid @RequestBody PinResetChallengeRequest request, Authentication authentication) {
+    pinService.requestPinReset(CurrentUser.idFrom(authentication), request);
+    return ResponseEntity.ok(
+        ApiResponse.success(MessageResponse.of("Verification code sent to your email and phone")));
+  }
+
+  @PostMapping("/api/v1/auth/pin/reset/verify")
+  public ResponseEntity<ApiResponse<MessageResponse>> verifyPinReset(
+      @Valid @RequestBody PinResetVerifyRequest request, Authentication authentication) {
+    pinService.confirmPinReset(CurrentUser.idFrom(authentication), request);
+    return ResponseEntity.ok(ApiResponse.success(MessageResponse.of("Transaction PIN reset")));
+  }
+
+  /** The endpoint other services will call (via an AuthClient/AuthGateway Feign pair, same shape as
+   * payment-service's existing TOTP step-up) to confirm a money-moving action — wiring deferred to
+   * a later pass. */
+  @PostMapping("/api/v1/auth/pin/verify")
+  public ResponseEntity<ApiResponse<MessageResponse>> verifyPin(
+      @Valid @RequestBody VerifyPinRequest request, Authentication authentication) {
+    pinService.verifyPin(CurrentUser.idFrom(authentication), request);
+    return ResponseEntity.ok(ApiResponse.success(MessageResponse.of("PIN verified")));
   }
 
   // ---- password reset ----

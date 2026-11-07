@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: authentication-service
+  config:
+    import: optional:classpath:application-secrets.yml
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
@@ -25,8 +27,23 @@ spring:
       value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
       properties:
         schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8085}
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 auth:
+  email:
+    provider: ${AUTH_EMAIL_PROVIDER:fake}
+    from: ${AUTH_EMAIL_FROM:${spring.mail.username:}}
+    from-name: ${AUTH_EMAIL_FROM_NAME:LendBridge}
   jwt:
     issuer: lendbridge-authentication-service
     audience: lendbridge-platform
@@ -51,3 +68,4 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
