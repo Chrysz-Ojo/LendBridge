@@ -27,5 +27,6 @@
     <module>services/loan-service</module>
     <module>services/marketplace-service</module>
     <module>services/investment-service</module>
+    <module>services/notification-service</module>
   </modules>
 </project>

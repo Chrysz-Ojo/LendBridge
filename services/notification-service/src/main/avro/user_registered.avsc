@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "UserRegistered",
+  "namespace": "com.lendbridge.authentication.avro",
+  "doc": "Published once a user's phone and email are both verified and the account becomes ACTIVE.",
+  "fields": [
+    { "name": "userId", "type": "string" },
+    { "name": "email", "type": "string" },
+    { "name": "emailVerified", "type": "boolean" },
+    { "name": "phoneVerified", "type": "boolean" },
+    { "name": "registeredAtEpochMillis", "type": "long" }
+  ]
+}

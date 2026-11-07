@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-seed-event-templates
+      author: lendbridge
+      changes:
+        - insert:
+            tableName: notification_template
+            columns:
+              - column: { name: id, value: "0f8c5a52-6f2e-4c1a-9b1e-3d2a7c9e0002" }
+              - column: { name: event_type, value: KYC_VERIFIED }
+              - column: { name: channel, value: EMAIL }
+              - column: { name: version, valueNumeric: 1 }
+              - column: { name: subject, value: "Your LendBridge verification is complete" }
+              - column: { name: body, value: "Your KYC verification is complete. You've reached trust tier {trustTier} and can now borrow or lend on LendBridge." }
+        - insert:
+            tableName: notification_template
+            columns:
+              - column: { name: id, value: "0f8c5a52-6f2e-4c1a-9b1e-3d2a7c9e0003" }
+              - column: { name: event_type, value: KYC_REJECTED }
+              - column: { name: channel, value: EMAIL }
+              - column: { name: version, valueNumeric: 1 }
+              - column: { name: subject, value: "Your LendBridge verification needs attention" }
+              - column: { name: body, value: "We could not verify your KYC submission. Reason: {reason}. Please review and resubmit your documents." }
+        - insert:
+            tableName: notification_template
+            columns:
+              - column: { name: id, value: "0f8c5a52-6f2e-4c1a-9b1e-3d2a7c9e0004" }
+              - column: { name: event_type, value: LOAN_LISTED }
+              - column: { name: channel, value: EMAIL }
+              - column: { name: version, valueNumeric: 1 }
+              - column: { name: subject, value: "Your loan request is live" }
+              - column: { name: body, value: "Your loan request for {amountKobo} kobo over {tenorMonths} months is now listed in the marketplace at {interestRateBps} bps interest. Lenders can now fund it." }
+      rollback:
+        - delete:
+            tableName: notification_template
+            where: id IN ('0f8c5a52-6f2e-4c1a-9b1e-3d2a7c9e0002', '0f8c5a52-6f2e-4c1a-9b1e-3d2a7c9e0003', '0f8c5a52-6f2e-4c1a-9b1e-3d2a7c9e0004')

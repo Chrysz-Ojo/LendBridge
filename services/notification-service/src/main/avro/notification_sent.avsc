@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "name": "NotificationSent",
+  "namespace": "com.lendbridge.notification.avro",
+  "doc": "Published after a notification attempt resolves to SENT, for Audit/Reporting to consume. Carries no PII (no recipient contact info, subject or body).",
+  "fields": [
+    { "name": "notificationId", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "channel", "type": "string" },
+    { "name": "eventType", "type": "string" },
+    { "name": "status", "type": "string" },
+    { "name": "occurredAtEpochMillis", "type": "long" }
+  ]
+}

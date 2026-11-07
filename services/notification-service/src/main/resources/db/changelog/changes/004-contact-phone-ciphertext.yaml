@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-contact-phone-ciphertext
+      author: lendbridge
+      changes:
+        - renameColumn:
+            tableName: contact
+            oldColumnName: phone
+            newColumnName: phone_ciphertext
+            columnDataType: varchar(20)
+        - modifyDataType:
+            tableName: contact
+            columnName: phone_ciphertext
+            newDataType: text
+      rollback:
+        - modifyDataType:
+            tableName: contact
+            columnName: phone_ciphertext
+            newDataType: varchar(20)
+        - renameColumn:
+            tableName: contact
+            oldColumnName: phone_ciphertext
+            newColumnName: phone
+            columnDataType: text

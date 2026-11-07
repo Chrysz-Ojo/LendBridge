@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-seed-welcome-template
+      author: lendbridge
+      changes:
+        - insert:
+            tableName: notification_template
+            columns:
+              - column: { name: id, value: "0f8c5a52-6f2e-4c1a-9b1e-3d2a7c9e0001" }
+              - column: { name: event_type, value: USER_REGISTERED }
+              - column: { name: channel, value: EMAIL }
+              - column: { name: version, valueNumeric: 1 }
+              - column: { name: subject, value: "Welcome to LendBridge" }
+              - column: { name: body, value: "Your LendBridge account is verified and ready. Complete your profile and KYC to start borrowing or lending." }
+      rollback:
+        - delete:
+            tableName: notification_template
+            where: id = '0f8c5a52-6f2e-4c1a-9b1e-3d2a7c9e0001'
