@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-event-preference-and-channel-policy
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: event_preference
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true } }
+              - column: { name: user_id, type: uuid, constraints: { nullable: false } }
+              - column: { name: event_type, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: email_enabled, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: sms_enabled, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: in_app_enabled, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamptz, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamptz, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: event_preference
+            columnNames: user_id, event_type
+        - createTable:
+            tableName: channel_policy
+            columns:
+              - column: { name: event_type, type: varchar(100), constraints: { primaryKey: true } }
+              - column: { name: email_enabled, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: sms_enabled, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: in_app_enabled, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamptz, constraints: { nullable: false } }
+      rollback:
+        - dropTable: { tableName: channel_policy }
+        - dropTable: { tableName: event_preference }

@@ -1,0 +1,72 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-notification-tables
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: contact
+            columns:
+              - column: { name: user_id, type: uuid, constraints: { primaryKey: true } }
+              - column: { name: first_name, type: varchar(100) }
+              - column: { name: email, type: varchar(255), constraints: { nullable: false } }
+              - column: { name: phone, type: varchar(20) }
+              - column: { name: updated_at, type: timestamptz, constraints: { nullable: false } }
+        - createTable:
+            tableName: notification_template
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true } }
+              - column: { name: event_type, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: channel, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: version, type: int, constraints: { nullable: false } }
+              - column: { name: subject, type: varchar(255) }
+              - column: { name: body, type: text, constraints: { nullable: false } }
+              - column: { name: active, type: boolean, defaultValueBoolean: true }
+        - addUniqueConstraint:
+            tableName: notification_template
+            columnNames: event_type, channel, version
+        - createTable:
+            tableName: notification
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true } }
+              - column: { name: user_id, type: uuid, constraints: { nullable: false } }
+              - column: { name: event_type, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: channel, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: subject, type: varchar(255) }
+              - column: { name: body, type: text, constraints: { nullable: false } }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamptz, constraints: { nullable: false } }
+              - column: { name: read_at, type: timestamptz }
+        - createIndex:
+            tableName: notification
+            indexName: idx_notification_user_created
+            columns:
+              - column: { name: user_id }
+              - column: { name: created_at }
+        - createTable:
+            tableName: delivery_attempt
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true } }
+              - column: { name: notification_id, type: uuid, constraints: { nullable: false, foreignKeyName: fk_attempt_notification, references: notification(id) } }
+              - column: { name: provider, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: error, type: text }
+              - column: { name: attempted_at, type: timestamptz, constraints: { nullable: false } }
+        - createTable:
+            tableName: channel_settings
+            columns:
+              - column: { name: user_id, type: uuid, constraints: { primaryKey: true } }
+              - column: { name: email_enabled, type: boolean, defaultValueBoolean: true }
+              - column: { name: sms_enabled, type: boolean, defaultValueBoolean: true }
+              - column: { name: marketing_opt_in, type: boolean, defaultValueBoolean: false }
+        - createTable:
+            tableName: processed_event
+            columns:
+              - column: { name: event_id, type: varchar(100), constraints: { primaryKey: true } }
+              - column: { name: processed_at, type: timestamptz, constraints: { nullable: false } }
+      rollback:
+        - dropTable: { tableName: processed_event }
+        - dropTable: { tableName: channel_settings }
+        - dropTable: { tableName: delivery_attempt }
+        - dropTable: { tableName: notification }
+        - dropTable: { tableName: notification_template }
+        - dropTable: { tableName: contact }

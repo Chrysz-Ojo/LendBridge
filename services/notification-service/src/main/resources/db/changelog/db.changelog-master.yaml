@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changes/001-notification-tables.yaml
+  - include:
+      file: db/changelog/changes/002-seed-welcome-template.yaml
+  - include:
+      file: db/changelog/changes/003-outbox-event.yaml
+  - include:
+      file: db/changelog/changes/004-contact-phone-ciphertext.yaml
+  - include:
+      file: db/changelog/changes/005-seed-event-templates.yaml
+  - include:
+      file: db/changelog/changes/006-event-preference-and-channel-policy.yaml

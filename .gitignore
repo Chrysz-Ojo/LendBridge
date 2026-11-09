@@ -9,3 +9,5 @@ out/
 *.log
 .DS_Store
 .claude/
+application-secrets.yml
+application-secrets.yaml

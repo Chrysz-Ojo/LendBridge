@@ -1,0 +1,76 @@
+server:
+  port: ${SERVER_PORT:8097}
+
+spring:
+  application:
+    name: notification-service
+  config:
+    import: optional:classpath:application-secrets.yml
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: notification-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+      properties:
+        schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8085}
+        specific.avro.reader: true
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      properties:
+        schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8085}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_SERVICE_JWK_SET_URI:http://localhost:8081/.well-known/jwks.json}
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+platform:
+  field-encryption:
+    key: ${NOTIFICATION_FIELD_ENCRYPTION_KEY}
+  outbox:
+    relay-interval-ms: 2000
+    ce-source: lendbridge://notification-service
+
+notification:
+  email:
+    provider: ${NOTIFICATION_EMAIL_PROVIDER:fake}
+    from: ${NOTIFICATION_EMAIL_FROM:${spring.mail.username:}}
+    from-name: ${NOTIFICATION_EMAIL_FROM_NAME:LendBridge}
+  sms:
+    provider: ${NOTIFICATION_SMS_PROVIDER:fake}
+    sender-id: ${NOTIFICATION_SMS_SENDER_ID:LendBridge}
+  termii:
+    base-url: ${TERMII_BASE_URL:https://api.ng.termii.com}
+    api-key: ${TERMII_API_KEY:}
+  africastalking:
+    base-url: ${AFRICAS_TALKING_BASE_URL:https://api.africastalking.com}
+    api-key: ${AFRICAS_TALKING_API_KEY:}
+    username: ${AFRICAS_TALKING_USERNAME:}

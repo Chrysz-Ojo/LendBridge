@@ -1,0 +1,12 @@
+# Local-development-only defaults. Never use these values outside a developer's own machine;
+# production configuration must come entirely from environment variables (CLAUDE.md "no secrets
+# in code").
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/notification_db
+    username: notification_service
+    password: local-dev-only-password
+
+platform:
+  field-encryption:
+    key: VmNRv4x8LFaf+1LLp1T07ZHOL4tYcFXaAO7Qx6EOfGI=
