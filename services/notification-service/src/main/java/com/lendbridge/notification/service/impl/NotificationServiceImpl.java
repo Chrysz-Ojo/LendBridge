@@ -99,13 +99,13 @@ public class NotificationServiceImpl implements NotificationService {
     EventPreference preference =
         eventPreferenceRepository.findByUserIdAndEventType(request.getUserId(), request.getType().name()).orElse(null);
 
+    notificationRepository.save(notification);
+
     if (shouldSkip(request, policy, preference, settings)) {
       notification.setStatus(NotificationStatus.SKIPPED);
     } else {
       attemptSend(request, notification);
     }
-
-    notificationRepository.save(notification);
 
     if (notification.getStatus() == NotificationStatus.SENT) {
       outboxEventWriter.write(
