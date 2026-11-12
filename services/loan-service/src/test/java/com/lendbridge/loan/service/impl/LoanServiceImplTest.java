@@ -3,6 +3,7 @@ package com.lendbridge.loan.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -21,6 +22,8 @@ import com.lendbridge.loan.mapper.LoanMapper;
 import com.lendbridge.loan.model.LoanApplication;
 import com.lendbridge.loan.model.LoanPurpose;
 import com.lendbridge.loan.model.LoanStatus;
+import com.lendbridge.loan.outbox.KafkaTopics;
+import com.lendbridge.loan.outbox.LoanSubmittedPayload;
 import com.lendbridge.loan.repository.LoanApplicationRepository;
 import com.lendbridge.starter.exception.BadRequestException;
 import com.lendbridge.starter.exception.ConflictException;
@@ -32,6 +35,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.dao.DataIntegrityViolationException;
 
 class LoanServiceImplTest {
@@ -147,7 +151,15 @@ class LoanServiceImplTest {
     LoanResponse response = service.submit(borrowerId, loan.getId());
 
     assertThat(response.getStatus()).isEqualTo(LoanStatus.UNDER_REVIEW);
-    verify(outboxEventWriter).write(any(), any(), any(), any());
+    ArgumentCaptor<LoanSubmittedPayload> payloadCaptor = ArgumentCaptor.forClass(LoanSubmittedPayload.class);
+    verify(outboxEventWriter).write(any(), any(), eq(KafkaTopics.LOAN_SUBMITTED), payloadCaptor.capture());
+    LoanSubmittedPayload payload = payloadCaptor.getValue();
+    assertThat(payload.getLoanId()).isEqualTo(loan.getId());
+    assertThat(payload.getBorrowerUserId()).isEqualTo(borrowerId);
+    assertThat(payload.getAmountKobo()).isEqualTo(loan.getAmountKobo());
+    assertThat(payload.getTenorMonths()).isEqualTo(loan.getTenorMonths());
+    assertThat(payload.getInterestRateBps()).isEqualTo(loan.getInterestRateBps());
+    assertThat(payload.getPurpose()).isEqualTo(loan.getPurpose().name());
   }
 
   @Test

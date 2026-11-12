@@ -87,6 +87,14 @@ public abstract class AbstractIntegrationTest {
     registry.add("loan.agreement.template-version", () -> "1");
   }
 
+  public static String schemaRegistryUrl() {
+    return "http://" + SCHEMA_REGISTRY.getHost() + ":" + SCHEMA_REGISTRY.getMappedPort(8081);
+  }
+
+  public static String kafkaBootstrapServers() {
+    return KAFKA.getBootstrapServers();
+  }
+
   private static String randomBase64Key() {
     byte[] key = new byte[32];
     new SecureRandom().nextBytes(key);

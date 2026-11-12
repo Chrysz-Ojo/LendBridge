@@ -47,6 +47,10 @@ public class OutboxRelay extends AbstractOutboxRelay {
         LoanSubmitted.newBuilder()
             .setLoanId(payload.getLoanId().toString())
             .setBorrowerUserId(payload.getBorrowerUserId().toString())
+            .setAmountKobo(payload.getAmountKobo())
+            .setTenorMonths(payload.getTenorMonths())
+            .setInterestRateBps(payload.getInterestRateBps())
+            .setPurpose(payload.getPurpose())
             .setOccurredAtEpochMillis(payload.getOccurredAtEpochMillis())
             .build();
     send(KafkaTopics.LOAN_SUBMITTED, event, avroValue);

@@ -15,5 +15,9 @@ import lombok.Setter;
 public class LoanSubmittedPayload {
   private UUID loanId;
   private UUID borrowerUserId;
+  private long amountKobo;
+  private int tenorMonths;
+  private int interestRateBps;
+  private String purpose;
   private long occurredAtEpochMillis;
 }

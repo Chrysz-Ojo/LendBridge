@@ -7,8 +7,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.lendbridge.loan.avro.LoanSubmitted;
+import com.lendbridge.loan.outbox.KafkaTopics;
 import com.lendbridge.loan.support.AbstractIntegrationTest;
+import java.time.Duration;
+import java.util.Properties;
 import java.util.UUID;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.GrantedAuthority;
@@ -115,6 +124,8 @@ class LoanControllerIT extends AbstractIntegrationTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.data.status", equalTo("UNDER_REVIEW")));
 
+    assertLoanSubmittedPublishedWithTerms(loanId, 1200000L, 12, 1800, "BUSINESS");
+
     mockMvc
         .perform(
             post("/api/v1/loans/review/" + loanId + "/decision")
@@ -156,6 +167,45 @@ class LoanControllerIT extends AbstractIntegrationTest {
         .andExpect(jsonPath("$.data.documentId", equalTo(documentId)));
 
     org.assertj.core.api.Assertions.assertThat(DOCUMENT_STUB.uploadCount()).isEqualTo(uploadsBefore + 1);
+  }
+
+  /**
+   * Regression guard for the bug where loan.submitted's Avro schema declared amountKobo,
+   * tenorMonths, interestRateBps and purpose as required fields but the producer never set them
+   * (so the generated builder would throw at relay time) — consumes the real Kafka record to
+   * confirm the relay actually serializes and publishes these fields.
+   */
+  private void assertLoanSubmittedPublishedWithTerms(
+      String loanId, long amountKobo, int tenorMonths, int interestRateBps, String purpose) {
+    Properties props = new Properties();
+    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers());
+    props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-" + UUID.randomUUID());
+    props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+    props.put(
+        ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
+        "io.confluent.kafka.serializers.KafkaAvroDeserializer");
+    props.put("schema.registry.url", schemaRegistryUrl());
+    props.put("specific.avro.reader", "true");
+    props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+    try (KafkaConsumer<String, LoanSubmitted> consumer = new KafkaConsumer<>(props)) {
+      consumer.subscribe(java.util.List.of(KafkaTopics.LOAN_SUBMITTED));
+      long deadline = System.currentTimeMillis() + 15_000;
+      while (System.currentTimeMillis() < deadline) {
+        ConsumerRecords<String, LoanSubmitted> records = consumer.poll(Duration.ofMillis(500));
+        for (ConsumerRecord<String, LoanSubmitted> record : records) {
+          if (record.key().equals(loanId)) {
+            org.assertj.core.api.Assertions.assertThat(record.value().getAmountKobo()).isEqualTo(amountKobo);
+            org.assertj.core.api.Assertions.assertThat(record.value().getTenorMonths()).isEqualTo(tenorMonths);
+            org.assertj.core.api.Assertions.assertThat(record.value().getInterestRateBps())
+                .isEqualTo(interestRateBps);
+            org.assertj.core.api.Assertions.assertThat(record.value().getPurpose().toString()).isEqualTo(purpose);
+            return;
+          }
+        }
+      }
+    }
+    throw new AssertionError("Did not receive loan.submitted Kafka message for loan " + loanId);
   }
 
   @Test

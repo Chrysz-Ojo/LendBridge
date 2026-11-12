@@ -141,6 +141,10 @@ public class LoanServiceImpl implements LoanService {
         LoanSubmittedPayload.builder()
             .loanId(loan.getId())
             .borrowerUserId(loan.getBorrowerUserId())
+            .amountKobo(loan.getAmountKobo())
+            .tenorMonths(loan.getTenorMonths())
+            .interestRateBps(loan.getInterestRateBps())
+            .purpose(loan.getPurpose().name())
             .occurredAtEpochMillis(now.toEpochMilli())
             .build());
 
