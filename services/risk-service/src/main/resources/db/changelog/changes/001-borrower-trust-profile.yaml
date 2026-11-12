@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-borrower-trust-profile
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: borrower_trust_profile
+            columns:
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: trust_tier
+                  type: varchar(16)
+              - column:
+                  name: reason
+                  type: text
+              - column:
+                  name: source_occurred_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false

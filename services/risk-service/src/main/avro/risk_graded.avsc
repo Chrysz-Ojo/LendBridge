@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "RiskGraded",
+  "namespace": "com.lendbridge.risk.avro",
+  "doc": "Published when a loan application receives (or is re-assigned) a risk grade.",
+  "fields": [
+    {"name": "loanId", "type": "string"},
+    {"name": "borrowerUserId", "type": "string"},
+    {"name": "grade", "type": "string"},
+    {"name": "modelVersion", "type": "string"},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-processed-event
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: processed_event
+            columns:
+              - column:
+                  name: event_id
+                  type: varchar(255)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: processed_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false

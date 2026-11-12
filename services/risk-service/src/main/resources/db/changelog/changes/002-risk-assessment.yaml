@@ -1,0 +1,72 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-risk-assessment
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: risk_assessment
+            columns:
+              - column:
+                  name: loan_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: borrower_user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: grade
+                  type: varchar(1)
+              - column:
+                  name: model_version
+                  type: varchar(32)
+              - column:
+                  name: trust_tier_used
+                  type: varchar(16)
+              - column:
+                  name: amount_kobo
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tenor_months
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: interest_rate_bps
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: kyc_rejection_reason
+                  type: text
+              - column:
+                  name: graded_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: risk_assessment
+            indexName: idx_risk_assessment_borrower_status
+            columns:
+              - column:
+                  name: borrower_user_id
+              - column:
+                  name: status
