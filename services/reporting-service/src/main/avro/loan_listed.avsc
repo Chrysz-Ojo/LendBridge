@@ -1,0 +1,15 @@
+{
+  "type": "record",
+  "name": "LoanListed",
+  "namespace": "com.lendbridge.loan.avro",
+  "doc": "Published when a risk officer approves a loan application, making it listable in the (not yet built) marketplace.",
+  "fields": [
+    {"name": "loanId", "type": "string"},
+    {"name": "borrowerUserId", "type": "string"},
+    {"name": "amountKobo", "type": "long"},
+    {"name": "interestRateBps", "type": "int"},
+    {"name": "tenorMonths", "type": "int"},
+    {"name": "purpose", "type": "string"},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

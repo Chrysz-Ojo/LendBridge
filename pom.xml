@@ -32,5 +32,6 @@
     <module>services/messaging-service</module>
     <module>services/support-service</module>
     <module>services/audit-service</module>
+    <module>services/reporting-service</module>
   </modules>
 </project>
