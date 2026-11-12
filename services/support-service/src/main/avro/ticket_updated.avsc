@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "TicketUpdated",
+  "namespace": "com.lendbridge.support.avro",
+  "doc": "Published when a ticket receives a new reply or changes status. Metadata only — never the message body, so a downstream consumer (e.g. notification-service) can only render a generic update notice.",
+  "fields": [
+    {"name": "ticketId", "type": "string"},
+    {"name": "userId", "type": "string"},
+    {"name": "status", "type": "string"},
+    {"name": "lastMessageAuthorRole", "type": "string"},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

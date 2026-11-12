@@ -30,5 +30,6 @@
     <module>services/investment-service</module>
     <module>services/notification-service</module>
     <module>services/messaging-service</module>
+    <module>services/support-service</module>
   </modules>
 </project>

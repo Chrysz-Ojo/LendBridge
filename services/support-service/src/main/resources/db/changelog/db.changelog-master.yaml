@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changes/001-ticket-and-message.yaml
+  - include:
+      file: db/changelog/changes/002-faq.yaml
+  - include:
+      file: db/changelog/changes/003-outbox-event.yaml
