@@ -89,6 +89,23 @@
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
     </dependency>
+    <!-- Same library and version loan-service already pins directly (services/loan-service/pom.xml)
+         for its agreement PDF rendering, not via platform-bom. Version pinned here directly; worth
+         checking Maven Central for a newer 3.0.x patch at review time. -->
+    <dependency>
+      <groupId>org.apache.pdfbox</groupId>
+      <artifactId>pdfbox</artifactId>
+      <version>3.0.3</version>
+    </dependency>
+    <!-- Apache POI for real .xlsx generation (ExcelReportRenderer) — no comparable alternative in
+         this ecosystem for native Excel workbook output. Version pinned here directly, not via
+         platform-bom (same one-off pattern as the pdfbox dependency above); worth checking Maven
+         Central for a newer 5.x patch at review time. -->
+    <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi-ooxml</artifactId>
+      <version>5.3.0</version>
+    </dependency>
 
     <dependency>
       <groupId>org.springframework.boot</groupId>

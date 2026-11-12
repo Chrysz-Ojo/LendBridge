@@ -1,4 +1,4 @@
-package com.lendbridge.reporting.csv;
+package com.lendbridge.reporting.export;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

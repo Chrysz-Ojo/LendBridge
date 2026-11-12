@@ -1,4 +1,4 @@
-package com.lendbridge.reporting.csv;
+package com.lendbridge.reporting.export;
 
 import com.lendbridge.reporting.dto.ReportTable;
 

@@ -7,7 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /** The one shape every report query returns, whether rendered as JSON ({@code ApiResponse<ReportTable>})
- * or streamed as CSV via {@link com.lendbridge.reporting.csv.CsvRenderer}. */
+ * or streamed as CSV/PDF/Excel via {@link com.lendbridge.reporting.export.CsvRenderer},
+ * {@link com.lendbridge.reporting.export.PdfReportRenderer}, or
+ * {@link com.lendbridge.reporting.export.ExcelReportRenderer}. */
 @Data
 @Builder
 @NoArgsConstructor

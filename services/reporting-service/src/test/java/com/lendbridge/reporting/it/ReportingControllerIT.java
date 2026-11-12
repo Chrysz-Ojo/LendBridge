@@ -69,6 +69,57 @@ class ReportingControllerIT extends AbstractIntegrationTest {
   }
 
   @Test
+  void loanPipeline_pdfFormat_streamsApplicationPdf() throws Exception {
+    loanPipelineFactRepository.save(
+        LoanPipelineFact.builder()
+            .id(UuidV7.generate())
+            .loanId(UUID.randomUUID())
+            .borrowerUserId(UUID.randomUUID())
+            .status(LoanPipelineStatus.LISTED)
+            .amountKobo(1_000_000L)
+            .tenorMonths(12)
+            .interestRateBps(1500)
+            .occurredAt(Instant.parse("2026-03-01T00:00:00Z"))
+            .build());
+
+    mockMvc
+        .perform(
+            get("/api/v1/reporting/loan-pipeline")
+                .param("format", "pdf")
+                .with(jwt().authorities(SUPER_ADMIN_AUTHORITY)))
+        .andExpect(status().isOk())
+        .andExpect(content().contentTypeCompatibleWith("application/pdf"))
+        .andExpect(result -> org.assertj.core.api.Assertions.assertThat(result.getResponse().getContentAsByteArray()).isNotEmpty());
+  }
+
+  @Test
+  void loanPipeline_excelFormat_streamsXlsxWorkbook() throws Exception {
+    loanPipelineFactRepository.save(
+        LoanPipelineFact.builder()
+            .id(UuidV7.generate())
+            .loanId(UUID.randomUUID())
+            .borrowerUserId(UUID.randomUUID())
+            .status(LoanPipelineStatus.LISTED)
+            .amountKobo(1_000_000L)
+            .tenorMonths(12)
+            .interestRateBps(1500)
+            .occurredAt(Instant.parse("2026-03-01T00:00:00Z"))
+            .build());
+
+    mockMvc
+        .perform(
+            get("/api/v1/reporting/loan-pipeline")
+                .param("format", "excel")
+                .with(jwt().authorities(SUPER_ADMIN_AUTHORITY)))
+        .andExpect(status().isOk())
+        .andExpect(
+            content()
+                .contentTypeCompatibleWith(
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+        .andExpect(result -> org.assertj.core.api.Assertions.assertThat(result.getResponse().getContentAsByteArray()).isNotEmpty());
+  }
+
+  @Test
   void loanPipeline_filtersByDateRange() throws Exception {
     loanPipelineFactRepository.save(
         LoanPipelineFact.builder()
