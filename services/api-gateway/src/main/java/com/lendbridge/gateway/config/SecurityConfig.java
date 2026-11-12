@@ -28,7 +28,8 @@ public class SecurityConfig {
                         "/api/v1/auth/login/**",
                         "/api/v1/auth/refresh",
                         "/api/v1/auth/password-reset/**",
-                        "/.well-known/jwks.json")
+                        "/.well-known/jwks.json",
+                        "/ws/**")
                     .permitAll()
                     .anyExchange()
                     .authenticated())

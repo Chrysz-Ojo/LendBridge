@@ -1,0 +1,61 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-outbox-event
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: outbox_event
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: aggregate_type
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: aggregate_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: event_type
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payload
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: attempts
+                  type: int
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: published_at
+                  type: TIMESTAMP WITH TIME ZONE
+        - createIndex:
+            tableName: outbox_event
+            indexName: idx_outbox_event_status_created_at
+            columns:
+              - column:
+                  name: status
+              - column:
+                  name: created_at

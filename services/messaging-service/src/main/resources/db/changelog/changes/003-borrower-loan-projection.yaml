@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-borrower-loan-projection
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: borrower_loan_projection
+            columns:
+              - column:
+                  name: loan_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: borrower_user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false

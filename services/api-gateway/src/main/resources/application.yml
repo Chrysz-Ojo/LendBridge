@@ -17,6 +17,14 @@ spring:
                 redis-rate-limiter.replenishRate: 20
                 redis-rate-limiter.burstCapacity: 40
                 key-resolver: "#{@ipKeyResolver}"
+        - id: messaging-service
+          uri: ${MESSAGING_SERVICE_URI:http://localhost:8099}
+          predicates:
+            - Path=/api/v1/messaging/**
+        - id: messaging-service-ws
+          uri: ${MESSAGING_SERVICE_WS_URI:ws://localhost:8099}
+          predicates:
+            - Path=/ws/**
   data:
     redis:
       host: ${REDIS_HOST:localhost}

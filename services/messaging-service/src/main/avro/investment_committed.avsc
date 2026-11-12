@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "InvestmentCommitted",
+  "namespace": "com.lendbridge.investment.avro",
+  "doc": "Published when a lender commits funds to a listed loan (a real wallet-service hold is created in the same request). marketplace-service consumes this to track funded-so-far on its own listing read model.",
+  "fields": [
+    {"name": "commitmentId", "type": "string"},
+    {"name": "loanId", "type": "string"},
+    {"name": "lenderUserId", "type": "string"},
+    {"name": "amountKobo", "type": "long"},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

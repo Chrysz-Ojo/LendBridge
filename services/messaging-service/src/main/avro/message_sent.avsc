@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "MessageSent",
+  "namespace": "com.lendbridge.messaging.avro",
+  "doc": "Published when a chat message is sent in a conversation. Deliberately excludes the message body so a downstream consumer (e.g. notification-service) can only render a generic 'new message' notification, never leak chat content cross-service.",
+  "fields": [
+    {"name": "conversationId", "type": "string"},
+    {"name": "messageId", "type": "string"},
+    {"name": "senderUserId", "type": "string"},
+    {"name": "recipientUserId", "type": "string"},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

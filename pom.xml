@@ -29,5 +29,6 @@
     <module>services/marketplace-service</module>
     <module>services/investment-service</module>
     <module>services/notification-service</module>
+    <module>services/messaging-service</module>
   </modules>
 </project>
