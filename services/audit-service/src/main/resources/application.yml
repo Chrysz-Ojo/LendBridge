@@ -1,0 +1,50 @@
+server:
+  port: ${SERVER_PORT:8101}
+
+spring:
+  application:
+    name: audit-service
+  config:
+    import: optional:classpath:application-secrets.yml
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: audit-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+      properties:
+        schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8085}
+        # Inverted from every sibling service on purpose: this consumer has no generated Avro
+        # classes to deserialize into (it has no .avsc schemas of its own — see the ADR), so it
+        # reads every topic as a generic org.apache.avro.generic.GenericRecord instead.
+        specific.avro.reader: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_SERVICE_JWK_SET_URI:http://localhost:8081/.well-known/jwks.json}
+
+platform:
+  field-encryption:
+    key: ${AUDIT_FIELD_ENCRYPTION_KEY}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
