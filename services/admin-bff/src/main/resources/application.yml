@@ -1,0 +1,93 @@
+server:
+  port: ${SERVER_PORT:8103}
+
+spring:
+  application:
+    name: admin-bff
+  config:
+    import: optional:classpath:application-secrets.yml
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      properties:
+        schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8085}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_SERVICE_JWK_SET_URI:http://localhost:8081/.well-known/jwks.json}
+
+platform:
+  field-encryption:
+    key: ${ADMIN_BFF_FIELD_ENCRYPTION_KEY}
+  outbox:
+    relay-interval-ms: 2000
+    ce-source: lendbridge://admin-bff
+
+# One URI per aggregated backend (see ADR 0023's 11-integration table). support-service backs two
+# integrations (tickets + FAQs) so SUPPORT_SERVICE_URI is shared between them.
+KYC_SERVICE_URI: ${KYC_SERVICE_URI:http://localhost:8093}
+LOAN_SERVICE_URI: ${LOAN_SERVICE_URI:http://localhost:8094}
+RISK_SERVICE_URI: ${RISK_SERVICE_URI:http://localhost:8098}
+SUPPORT_SERVICE_URI: ${SUPPORT_SERVICE_URI:http://localhost:8100}
+MESSAGING_SERVICE_URI: ${MESSAGING_SERVICE_URI:http://localhost:8099}
+NOTIFICATION_SERVICE_URI: ${NOTIFICATION_SERVICE_URI:http://localhost:8097}
+AUTH_SERVICE_URI: ${AUTH_SERVICE_URI:http://localhost:8081}
+AUDIT_SERVICE_URI: ${AUDIT_SERVICE_URI:http://localhost:8101}
+REPORTING_SERVICE_URI: ${REPORTING_SERVICE_URI:http://localhost:8102}
+PAYMENT_SERVICE_URI: ${PAYMENT_SERVICE_URI:http://localhost:8092}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      kycService: &cb-defaults
+        sliding-window-size: 20
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 15s
+        permitted-number-of-calls-in-half-open-state: 5
+        minimum-number-of-calls: 5
+      loanService: *cb-defaults
+      riskService: *cb-defaults
+      supportService: *cb-defaults
+      messagingService: *cb-defaults
+      notificationService: *cb-defaults
+      authenticationService: *cb-defaults
+      auditService: *cb-defaults
+      reportingService: *cb-defaults
+      paymentService: *cb-defaults
+  retry:
+    instances:
+      kycService: &retry-defaults
+        max-attempts: 2
+        wait-duration: 100ms
+      loanService: *retry-defaults
+      riskService: *retry-defaults
+      supportService: *retry-defaults
+      messagingService: *retry-defaults
+      notificationService: *retry-defaults
+      authenticationService: *retry-defaults
+      auditService: *retry-defaults
+      reportingService: *retry-defaults
+      paymentService: *retry-defaults
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

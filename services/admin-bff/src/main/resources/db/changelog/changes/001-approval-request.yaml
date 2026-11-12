@@ -1,0 +1,56 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-approval-request
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: approval_request
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: action_type
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: action_payload
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: raised_by_user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: decided_by_user_id
+                  type: uuid
+              - column:
+                  name: decision_reason
+                  type: text
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: decided_at
+                  type: TIMESTAMP WITH TIME ZONE
+        - createIndex:
+            tableName: approval_request
+            indexName: idx_approval_request_status_created_at
+            columns:
+              - column:
+                  name: status
+              - column:
+                  name: created_at

@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "name": "AdminAction",
+  "namespace": "com.lendbridge.adminbff.avro",
+  "doc": "Published when a maker-checker-gated admin action is approved or rejected (status distinguishes which) — metadata only, no business-data echo.",
+  "fields": [
+    {"name": "approvalId", "type": "string"},
+    {"name": "actionType", "type": "string"},
+    {"name": "raisedByUserId", "type": "string"},
+    {"name": "decidedByUserId", "type": "string"},
+    {"name": "status", "type": "string"},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}
