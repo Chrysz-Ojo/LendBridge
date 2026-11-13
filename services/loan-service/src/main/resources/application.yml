@@ -53,6 +53,7 @@ loan:
     expiry-days: ${LOAN_LISTING_EXPIRY_DAYS:14}
   agreement:
     template-version: ${LOAN_AGREEMENT_TEMPLATE_VERSION:1}
+  origination-fee-bps: ${LOAN_ORIGINATION_FEE_BPS:100}
 
 kyc-service:
   url: ${KYC_SERVICE_URL:http://localhost:8093}

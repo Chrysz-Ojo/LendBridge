@@ -41,6 +41,12 @@ public class Commitment {
   @Column(name = "hold_id", nullable = false)
   private UUID holdId;
 
+  /** The lender's wallet ledger account, captured for free from {@code createHold}'s response at
+   * commitment-creation time — the funding saga's disbursement-leg assembly (Stage 5) reads this
+   * directly off every ACTIVE commitment for a loan, with no extra cross-service call needed. */
+  @Column(name = "lender_ledger_account_id")
+  private UUID lenderLedgerAccountId;
+
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private CommitmentStatus status;

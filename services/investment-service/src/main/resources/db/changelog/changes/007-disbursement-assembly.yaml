@@ -1,0 +1,47 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-disbursement-assembly
+      author: lendbridge
+      comment: >
+        The funding saga's aggregator, keyed by loanId: joins loan.agreement.signed (origination
+        fee), wallet.holds.capture-assembled, and wallet.borrower-account.assembled before acting.
+        Deleted once the row is acted on — this table only ever holds in-flight sagas.
+      changes:
+        - createTable:
+            tableName: disbursement_assembly
+            columns:
+              - column:
+                  name: loan_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: origination_fee_kobo
+                  type: bigint
+              - column:
+                  name: signed_received
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: holds_success
+                  type: boolean
+              - column:
+                  name: holds_failure_reason
+                  type: varchar(1000)
+              - column:
+                  name: borrower_account_success
+                  type: boolean
+              - column:
+                  name: borrower_ledger_account_id
+                  type: uuid
+              - column:
+                  name: borrower_account_failure_reason
+                  type: varchar(1000)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false

@@ -5,17 +5,29 @@ import com.lendbridge.loan.document.DocumentUploadClient;
 import com.lendbridge.loan.document.DocumentUploadResponse;
 import com.lendbridge.loan.dto.AgreementResponse;
 import com.lendbridge.loan.dto.CreateLoanRequest;
+import com.lendbridge.loan.dto.InstalmentResponse;
 import com.lendbridge.loan.dto.LoanResponse;
+import com.lendbridge.loan.dto.RepaymentRequest;
 import com.lendbridge.loan.dto.ScheduleResponse;
 import com.lendbridge.loan.kyc.KycGateway;
 import com.lendbridge.loan.kyc.KycStatusResponse;
 import com.lendbridge.loan.mapper.LoanMapper;
+import com.lendbridge.loan.model.Instalment;
+import com.lendbridge.loan.model.InstalmentStatus;
 import com.lendbridge.loan.model.LoanApplication;
 import com.lendbridge.loan.model.LoanStatus;
+import com.lendbridge.loan.model.RepaymentMethod;
+import com.lendbridge.loan.model.RepaymentSchedule;
 import com.lendbridge.loan.outbox.KafkaTopics;
+import com.lendbridge.loan.outbox.LoanAgreementSignedPayload;
 import com.lendbridge.loan.outbox.LoanDelistedPayload;
+import com.lendbridge.loan.outbox.LoanDisbursedPayload;
+import com.lendbridge.loan.outbox.LoanRepaidPayload;
+import com.lendbridge.loan.outbox.LoanRepaymentRequestedPayload;
 import com.lendbridge.loan.outbox.LoanSubmittedPayload;
+import com.lendbridge.loan.repository.InstalmentRepository;
 import com.lendbridge.loan.repository.LoanApplicationRepository;
+import com.lendbridge.loan.repository.RepaymentScheduleRepository;
 import com.lendbridge.loan.service.LoanService;
 import com.lendbridge.starter.crypto.UuidV7;
 import com.lendbridge.starter.exception.BadRequestException;
@@ -23,10 +35,16 @@ import com.lendbridge.starter.exception.ConflictException;
 import com.lendbridge.starter.exception.NotFoundException;
 import com.lendbridge.starter.exception.UnprocessableEntityException;
 import com.lendbridge.starter.outbox.OutboxEventWriter;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -41,7 +59,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class LoanServiceImpl implements LoanService {
 
+  private static final Logger log = LoggerFactory.getLogger(LoanServiceImpl.class);
+
   private final LoanApplicationRepository loanApplicationRepository;
+  private final RepaymentScheduleRepository repaymentScheduleRepository;
+  private final InstalmentRepository instalmentRepository;
   private final KycGateway kycGateway;
   private final OutboxEventWriter outboxEventWriter;
   private final AgreementPdfRenderer agreementPdfRenderer;
@@ -54,9 +76,12 @@ public class LoanServiceImpl implements LoanService {
   private final long tier1LimitKobo;
   private final long tier2LimitKobo;
   private final long tier3LimitKobo;
+  private final int originationFeeBps;
 
   public LoanServiceImpl(
       LoanApplicationRepository loanApplicationRepository,
+      RepaymentScheduleRepository repaymentScheduleRepository,
+      InstalmentRepository instalmentRepository,
       KycGateway kycGateway,
       OutboxEventWriter outboxEventWriter,
       AgreementPdfRenderer agreementPdfRenderer,
@@ -68,8 +93,11 @@ public class LoanServiceImpl implements LoanService {
       @Value("${loan.rate.cap-bps}") int rateCapBps,
       @Value("${loan.trust-tier.tier1-limit-kobo}") long tier1LimitKobo,
       @Value("${loan.trust-tier.tier2-limit-kobo}") long tier2LimitKobo,
-      @Value("${loan.trust-tier.tier3-limit-kobo}") long tier3LimitKobo) {
+      @Value("${loan.trust-tier.tier3-limit-kobo}") long tier3LimitKobo,
+      @Value("${loan.origination-fee-bps}") int originationFeeBps) {
     this.loanApplicationRepository = loanApplicationRepository;
+    this.repaymentScheduleRepository = repaymentScheduleRepository;
+    this.instalmentRepository = instalmentRepository;
     this.kycGateway = kycGateway;
     this.outboxEventWriter = outboxEventWriter;
     this.agreementPdfRenderer = agreementPdfRenderer;
@@ -82,6 +110,7 @@ public class LoanServiceImpl implements LoanService {
     this.tier1LimitKobo = tier1LimitKobo;
     this.tier2LimitKobo = tier2LimitKobo;
     this.tier3LimitKobo = tier3LimitKobo;
+    this.originationFeeBps = originationFeeBps;
   }
 
   @Override
@@ -229,6 +258,254 @@ public class LoanServiceImpl implements LoanService {
         .build();
   }
 
+  @Override
+  @Transactional
+  public LoanResponse signAgreement(UUID borrowerUserId, UUID loanId) {
+    LoanApplication loan = findOwned(borrowerUserId, loanId);
+    if (loan.getStatus() != LoanStatus.FUNDED) {
+      throw new ConflictException("LOAN_NOT_FUNDED", "An agreement can only be signed once the loan is fully funded");
+    }
+
+    Instant now = Instant.now();
+    long originationFeeKobo =
+        BigDecimal.valueOf(loan.getAmountKobo())
+            .multiply(BigDecimal.valueOf(originationFeeBps))
+            .divide(BigDecimal.valueOf(10_000), 0, RoundingMode.HALF_EVEN)
+            .longValueExact();
+    loan.setOriginationFeeKobo(originationFeeKobo);
+    loan.setAgreementSignedAt(now);
+    loan.setStatus(LoanStatus.DISBURSING);
+    loan.setUpdatedAt(now);
+
+    outboxEventWriter.write(
+        "LoanApplication",
+        loan.getId().toString(),
+        KafkaTopics.LOAN_AGREEMENT_SIGNED,
+        LoanAgreementSignedPayload.builder()
+            .loanId(loan.getId())
+            .borrowerUserId(loan.getBorrowerUserId())
+            .amountKobo(loan.getAmountKobo())
+            .originationFeeKobo(originationFeeKobo)
+            .occurredAtEpochMillis(now.toEpochMilli())
+            .build());
+
+    loanApplicationRepository.save(loan);
+    return toResponse(loan);
+  }
+
+  @Override
+  @Transactional
+  public void recordCommitment(UUID loanId, long amountKobo) {
+    Optional<LoanApplication> maybeLoan = loanApplicationRepository.findById(loanId);
+    if (maybeLoan.isEmpty()) {
+      log.warn("investment.committed for unknown loan {}", loanId);
+      return;
+    }
+    LoanApplication loan = maybeLoan.get();
+    if (loan.getStatus() != LoanStatus.LISTED && loan.getStatus() != LoanStatus.FUNDING) {
+      log.warn("Ignoring investment.committed for loan {} in status {}", loanId, loan.getStatus());
+      return;
+    }
+
+    loan.setFundedAmountKobo(loan.getFundedAmountKobo() + amountKobo);
+    if (loan.getStatus() == LoanStatus.LISTED) {
+      loan.setStatus(LoanStatus.FUNDING);
+    }
+    if (loan.getFundedAmountKobo() >= loan.getAmountKobo()) {
+      loan.setStatus(LoanStatus.FUNDED);
+    }
+    loan.setUpdatedAt(Instant.now());
+    loanApplicationRepository.save(loan);
+  }
+
+  @Override
+  @Transactional
+  public void recordCommitmentCancelled(UUID loanId, long amountKobo) {
+    Optional<LoanApplication> maybeLoan = loanApplicationRepository.findById(loanId);
+    if (maybeLoan.isEmpty()) {
+      log.warn("investment.cancelled for unknown loan {}", loanId);
+      return;
+    }
+    LoanApplication loan = maybeLoan.get();
+    if (loan.getStatus() != LoanStatus.FUNDING && loan.getStatus() != LoanStatus.FUNDED) {
+      log.warn("Ignoring investment.cancelled for loan {} in status {}", loanId, loan.getStatus());
+      return;
+    }
+
+    loan.setFundedAmountKobo(Math.max(0, loan.getFundedAmountKobo() - amountKobo));
+    if (loan.getStatus() == LoanStatus.FUNDED && loan.getFundedAmountKobo() < loan.getAmountKobo()) {
+      loan.setStatus(LoanStatus.FUNDING);
+    }
+    loan.setUpdatedAt(Instant.now());
+    loanApplicationRepository.save(loan);
+  }
+
+  @Override
+  @Transactional
+  public void revertToFunded(UUID loanId) {
+    Optional<LoanApplication> maybeLoan = loanApplicationRepository.findById(loanId);
+    if (maybeLoan.isEmpty()) {
+      log.warn("investment.disbursement.compensate for unknown loan {}", loanId);
+      return;
+    }
+    LoanApplication loan = maybeLoan.get();
+    if (loan.getStatus() != LoanStatus.DISBURSING) {
+      log.info("Ignoring disbursement-compensate for loan {} in status {}", loanId, loan.getStatus());
+      return;
+    }
+    loan.setStatus(LoanStatus.FUNDED);
+    loan.setUpdatedAt(Instant.now());
+    loanApplicationRepository.save(loan);
+    log.warn("Loan {} disbursement failed and was compensated; reverted to FUNDED", loanId);
+  }
+
+  @Override
+  @Transactional
+  public void disburse(UUID loanId) {
+    LoanApplication loan =
+        loanApplicationRepository
+            .findById(loanId)
+            .orElseThrow(() -> new NotFoundException("LOAN_NOT_FOUND", "Loan request not found"));
+    if (loan.getStatus() != LoanStatus.DISBURSING) {
+      log.info("Ignoring ledger.loan-disbursement.completed for loan {} in status {}", loanId, loan.getStatus());
+      return;
+    }
+
+    Instant now = Instant.now();
+    ScheduleResponse schedule =
+        RepaymentScheduleCalculator.compute(
+            ScheduleCalculationRequest.builder()
+                .amountKobo(loan.getAmountKobo())
+                .tenorMonths(loan.getTenorMonths())
+                .interestRateBps(loan.getInterestRateBps())
+                .startDate(now.atZone(ZoneOffset.UTC).toLocalDate())
+                .build());
+
+    repaymentScheduleRepository.save(
+        RepaymentSchedule.builder()
+            .loanId(loanId)
+            .totalPrincipalKobo(schedule.getTotalPrincipalKobo())
+            .totalInterestKobo(schedule.getTotalInterestKobo())
+            .totalRepaymentKobo(schedule.getTotalRepaymentKobo())
+            .createdAt(now)
+            .build());
+    instalmentRepository.saveAll(
+        schedule.getInstalments().stream()
+            .map(
+                i ->
+                    Instalment.builder()
+                        .id(UuidV7.generate())
+                        .loanId(loanId)
+                        .instalmentNumber(i.getInstalmentNumber())
+                        .dueDate(i.getDueDate())
+                        .principalKobo(i.getPrincipalKobo())
+                        .interestKobo(i.getInterestKobo())
+                        .totalKobo(i.getTotalKobo())
+                        .status(InstalmentStatus.PENDING)
+                        .build())
+            .toList());
+
+    loan.setStatus(LoanStatus.ACTIVE);
+    loan.setUpdatedAt(now);
+
+    outboxEventWriter.write(
+        "LoanApplication",
+        loan.getId().toString(),
+        KafkaTopics.LOAN_DISBURSED,
+        LoanDisbursedPayload.builder()
+            .loanId(loan.getId())
+            .borrowerUserId(loan.getBorrowerUserId())
+            .amountKobo(loan.getAmountKobo())
+            .occurredAtEpochMillis(now.toEpochMilli())
+            .build());
+
+    loanApplicationRepository.save(loan);
+  }
+
+  @Override
+  @Transactional
+  public LoanResponse requestRepayment(UUID borrowerUserId, UUID loanId, RepaymentRequest request) {
+    if (request.getMethod() != RepaymentMethod.WALLET) {
+      throw new UnprocessableEntityException(
+          "REPAYMENT_METHOD_NOT_SUPPORTED", "Only wallet-funded repayments are supported");
+    }
+    LoanApplication loan = findOwned(borrowerUserId, loanId);
+    if (loan.getStatus() != LoanStatus.ACTIVE) {
+      throw new ConflictException("LOAN_NOT_ACTIVE", "Repayments can only be made while the loan is Active");
+    }
+    Instalment instalment =
+        instalmentRepository
+            .findFirstByLoanIdAndStatusOrderByInstalmentNumberAsc(loanId, InstalmentStatus.PENDING)
+            .orElseThrow(
+                () -> new ConflictException("LOAN_FULLY_REPAID", "This loan has no outstanding instalments"));
+
+    Instant now = Instant.now();
+    instalment.setStatus(InstalmentStatus.REQUESTED);
+    instalmentRepository.save(instalment);
+
+    outboxEventWriter.write(
+        "Loan",
+        loanId.toString(),
+        KafkaTopics.LOAN_REPAYMENT_REQUESTED,
+        LoanRepaymentRequestedPayload.builder()
+            .loanId(loanId)
+            .instalmentId(instalment.getId())
+            .borrowerUserId(borrowerUserId)
+            .amountKobo(instalment.getTotalKobo())
+            .occurredAtEpochMillis(now.toEpochMilli())
+            .build());
+
+    return toResponse(loan);
+  }
+
+  @Override
+  @Transactional
+  public void markInstalmentPaid(UUID loanId, UUID instalmentId) {
+    Instalment instalment = instalmentRepository.findById(instalmentId).orElse(null);
+    if (instalment == null || instalment.getStatus() != InstalmentStatus.REQUESTED) {
+      log.info("Ignoring repayment-completed for instalment {} (not REQUESTED)", instalmentId);
+      return;
+    }
+
+    Instant now = Instant.now();
+    instalment.setStatus(InstalmentStatus.PAID);
+    instalment.setPaidAt(now);
+    instalmentRepository.save(instalment);
+
+    if (!instalmentRepository.existsByLoanIdAndStatusNot(loanId, InstalmentStatus.PAID)) {
+      LoanApplication loan =
+          loanApplicationRepository
+              .findById(loanId)
+              .orElseThrow(() -> new NotFoundException("LOAN_NOT_FOUND", "Loan request not found"));
+      loan.setStatus(LoanStatus.REPAID);
+      loan.setUpdatedAt(now);
+      loanApplicationRepository.save(loan);
+
+      outboxEventWriter.write(
+          "LoanApplication",
+          loanId.toString(),
+          KafkaTopics.LOAN_REPAID,
+          LoanRepaidPayload.builder()
+              .loanId(loanId)
+              .borrowerUserId(loan.getBorrowerUserId())
+              .occurredAtEpochMillis(now.toEpochMilli())
+              .build());
+    }
+  }
+
+  @Override
+  @Transactional
+  public void revertInstalmentToPending(UUID loanId, UUID instalmentId) {
+    Instalment instalment = instalmentRepository.findById(instalmentId).orElse(null);
+    if (instalment == null || instalment.getStatus() != InstalmentStatus.REQUESTED) {
+      log.info("Ignoring repayment-failure for instalment {} (not REQUESTED)", instalmentId);
+      return;
+    }
+    instalment.setStatus(InstalmentStatus.PENDING);
+    instalmentRepository.save(instalment);
+    log.warn("Repayment failed for loan {} instalment {}; reverted to PENDING", loanId, instalmentId);
+  }
+
   private void enforceTrustTierLimit(long amountKobo) {
     KycStatusResponse kycStatus = kycGateway.fetchMyStatus();
     long limitKobo =
@@ -261,7 +538,44 @@ public class LoanServiceImpl implements LoanService {
   }
 
   private LoanResponse toResponse(LoanApplication loan) {
-    return loanMapper.toResponse(loan, schedulePreviewFor(loan));
+    return loanMapper.toResponse(loan, scheduleFor(loan));
+  }
+
+  /** Once a loan has disbursed, the real persisted schedule (and every instalment's real
+   * {@code PAID}/{@code REQUESTED} status) is the truth — falling back to a freshly recomputed
+   * preview would silently show a stale or wrong picture once repayments start happening. Before
+   * disbursement, no persisted schedule exists yet, so the preview is all there is. */
+  private ScheduleResponse scheduleFor(LoanApplication loan) {
+    return repaymentScheduleRepository
+        .findById(loan.getId())
+        .map(schedule -> persistedScheduleResponse(loan.getId(), schedule))
+        .orElseGet(() -> schedulePreviewFor(loan));
+  }
+
+  private ScheduleResponse persistedScheduleResponse(UUID loanId, RepaymentSchedule schedule) {
+    List<Instalment> instalments = instalmentRepository.findAllByLoanIdOrderByInstalmentNumberAsc(loanId);
+    long outstanding = schedule.getTotalPrincipalKobo();
+    List<InstalmentResponse> instalmentResponses = new ArrayList<>(instalments.size());
+    for (Instalment instalment : instalments) {
+      outstanding -= instalment.getPrincipalKobo();
+      instalmentResponses.add(
+          InstalmentResponse.builder()
+              .instalmentNumber(instalment.getInstalmentNumber())
+              .dueDate(instalment.getDueDate())
+              .principalKobo(instalment.getPrincipalKobo())
+              .interestKobo(instalment.getInterestKobo())
+              .totalKobo(instalment.getTotalKobo())
+              .outstandingBalanceKobo(Math.max(outstanding, 0))
+              .status(instalment.getStatus())
+              .paidAt(instalment.getPaidAt())
+              .build());
+    }
+    return ScheduleResponse.builder()
+        .totalPrincipalKobo(schedule.getTotalPrincipalKobo())
+        .totalInterestKobo(schedule.getTotalInterestKobo())
+        .totalRepaymentKobo(schedule.getTotalRepaymentKobo())
+        .instalments(instalmentResponses)
+        .build();
   }
 
   private ScheduleResponse schedulePreviewFor(LoanApplication loan) {

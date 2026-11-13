@@ -41,8 +41,17 @@ public class HoldServiceImpl implements HoldService {
   @Transactional
   public HoldResponse createHold(UUID userId, CreateHoldRequest request, String idempotencyKey) {
     return idempotencyOperations.runIdempotently(
-        () -> holdRepository.findByIdempotencyKey(idempotencyKey).map(holdMapper::toResponse),
+        () -> holdRepository.findByIdempotencyKey(idempotencyKey).map(hold -> toResponseWithLedgerAccount(userId, hold)),
         () -> createHoldRecord(userId, request, idempotencyKey));
+  }
+
+  /** A retried idempotent request needs {@code walletLedgerAccountId} on its replayed response
+   * too, same as the first attempt — {@code findWallet}, not {@code getOrCreateWallet}: the wallet
+   * already exists by definition if a hold against it does. */
+  private HoldResponse toResponseWithLedgerAccount(UUID userId, Hold hold) {
+    HoldResponse response = holdMapper.toResponse(hold);
+    walletService.findWallet(userId).ifPresent(wallet -> response.setWalletLedgerAccountId(wallet.getLedgerAccountId()));
+    return response;
   }
 
   private HoldResponse createHoldRecord(UUID userId, CreateHoldRequest request, String idempotencyKey) {
@@ -81,7 +90,9 @@ public class HoldServiceImpl implements HoldService {
             hold.getReference(),
             now.toEpochMilli()));
 
-    return holdMapper.toResponse(hold);
+    HoldResponse response = holdMapper.toResponse(hold);
+    response.setWalletLedgerAccountId(wallet.getLedgerAccountId());
+    return response;
   }
 
   @Override
@@ -119,6 +130,38 @@ public class HoldServiceImpl implements HoldService {
             hold.getAmountKobo(),
             hold.getReference(),
             now.toEpochMilli()));
+  }
+
+  @Override
+  @Transactional
+  public void captureHolds(List<UUID> holdIds) {
+    List<Hold> holds = holdRepository.findAllById(holdIds);
+    if (holds.size() != holdIds.size()) {
+      throw new NotFoundException("HOLD_NOT_FOUND", "One or more holds do not exist");
+    }
+    for (Hold hold : holds) {
+      if (hold.getStatus() != HoldStatus.ACTIVE) {
+        throw new UnprocessableEntityException(
+            "HOLD_NOT_ACTIVE", "Hold " + hold.getId() + " is not ACTIVE (status: " + hold.getStatus() + ")");
+      }
+    }
+    Instant now = Instant.now();
+    for (Hold hold : holds) {
+      hold.setStatus(HoldStatus.CONVERTED);
+    }
+    holdRepository.saveAll(holds);
+  }
+
+  @Override
+  @Transactional
+  public void restoreHolds(List<UUID> holdIds) {
+    List<Hold> holds = holdRepository.findAllById(holdIds);
+    for (Hold hold : holds) {
+      if (hold.getStatus() == HoldStatus.CONVERTED) {
+        hold.setStatus(HoldStatus.ACTIVE);
+      }
+    }
+    holdRepository.saveAll(holds);
   }
 
   @Override

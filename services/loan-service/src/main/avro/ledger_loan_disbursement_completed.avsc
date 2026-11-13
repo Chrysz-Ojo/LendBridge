@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "LedgerLoanDisbursementCompleted",
+  "namespace": "com.lendbridge.ledger.avro",
+  "doc": "Published once both disbursement journal entries (lenders -> escrow, escrow -> borrower + fee) post successfully in one local transaction.",
+  "fields": [
+    {"name": "loanId", "type": "string"},
+    {"name": "totalKobo", "type": "long"},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

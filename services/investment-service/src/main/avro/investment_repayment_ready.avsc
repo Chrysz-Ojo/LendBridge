@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "InvestmentRepaymentReady",
+  "namespace": "com.lendbridge.investment.avro",
+  "doc": "Published once pro-rata lender shares for one repayment instalment are computed: the borrower's ledger account to debit, and each lender's ledger account to credit.",
+  "fields": [
+    {"name": "loanId", "type": "string"},
+    {"name": "instalmentId", "type": "string"},
+    {"name": "borrowerLedgerAccountId", "type": "string"},
+    {"name": "totalKobo", "type": "long"},
+    {"name": "legs", "type": {"type": "array", "items": {
+      "type": "record", "name": "RepaymentLeg",
+      "fields": [
+        {"name": "lenderLedgerAccountId", "type": "string"},
+        {"name": "amountKobo", "type": "long"}
+      ]
+    }}},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

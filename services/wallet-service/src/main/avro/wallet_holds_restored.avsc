@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "WalletHoldsRestored",
+  "namespace": "com.lendbridge.wallet.avro",
+  "doc": "Published after compensating a failed disbursement - these holds were flipped back to ACTIVE. Nothing currently consumes this; it exists because every state change publishes an event (CLAUDE.md), and audit-service's generic sink picks it up automatically.",
+  "fields": [
+    {"name": "loanId", "type": "string"},
+    {"name": "holdIds", "type": {"type": "array", "items": "string"}},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

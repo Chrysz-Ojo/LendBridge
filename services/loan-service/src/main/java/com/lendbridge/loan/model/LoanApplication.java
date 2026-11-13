@@ -77,6 +77,20 @@ public class LoanApplication {
   @Column(name = "expires_at")
   private Instant expiresAt;
 
+  /** Running total of ACTIVE commitments against this loan — kept current by
+   * {@code InvestmentCommittedEventConsumer}/{@code InvestmentCancelledEventConsumer} (funding
+   * saga Stage 1). Drives the {@code LISTED -> FUNDING -> FUNDED} transition. */
+  @Column(name = "funded_amount_kobo", nullable = false)
+  @Builder.Default
+  private long fundedAmountKobo = 0L;
+
+  /** Computed once, at signing (funding saga Stage 2) — {@code null} until then. */
+  @Column(name = "origination_fee_kobo")
+  private Long originationFeeKobo;
+
+  @Column(name = "agreement_signed_at")
+  private Instant agreementSignedAt;
+
   @Column(name = "created_at", nullable = false)
   private Instant createdAt;
 

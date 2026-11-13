@@ -9,3 +9,11 @@ databaseChangeLog:
       file: db/changelog/changes/004-processed-event.yaml
   - include:
       file: db/changelog/changes/005-outbox-event.yaml
+  - include:
+      file: db/changelog/changes/006-commitment-lender-ledger-account.yaml
+  - include:
+      file: db/changelog/changes/007-disbursement-assembly.yaml
+  - include:
+      file: db/changelog/changes/008-holding.yaml
+  - include:
+      file: db/changelog/changes/009-repayment-assembly.yaml

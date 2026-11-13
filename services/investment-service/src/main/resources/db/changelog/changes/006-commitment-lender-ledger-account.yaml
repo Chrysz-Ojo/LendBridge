@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-commitment-lender-ledger-account
+      author: lendbridge
+      comment: >
+        The funding saga's disbursement-leg assembly (Stage 5) needs each lender's ledger account
+        to debit; nullable because existing commitments predate this column, but every commitment
+        created going forward populates it for free from createHold's response.
+      changes:
+        - addColumn:
+            tableName: commitment
+            columns:
+              - column:
+                  name: lender_ledger_account_id
+                  type: uuid

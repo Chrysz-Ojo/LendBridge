@@ -11,6 +11,7 @@ import com.lendbridge.investment.outbox.KafkaTopics;
 import com.lendbridge.investment.repository.CommitmentRepository;
 import com.lendbridge.investment.repository.LoanListingRepository;
 import com.lendbridge.investment.service.CommitmentService;
+import com.lendbridge.investment.wallet.HoldResult;
 import com.lendbridge.investment.wallet.WalletGateway;
 import com.lendbridge.starter.crypto.UuidV7;
 import com.lendbridge.starter.exception.BadRequestException;
@@ -93,7 +94,7 @@ public class CommitmentServiceImpl implements CommitmentService {
 
     enforceBorrowerExposureCap(lenderUserId, loanListing.getBorrowerUserId(), amountKobo);
 
-    UUID holdId = walletGateway.createHold(idempotencyKey, amountKobo, "loan:" + loanId);
+    HoldResult hold = walletGateway.createHold(idempotencyKey, amountKobo, "loan:" + loanId);
 
     Instant now = Instant.now();
     Commitment commitment =
@@ -102,7 +103,8 @@ public class CommitmentServiceImpl implements CommitmentService {
             .lenderUserId(lenderUserId)
             .loanId(loanId)
             .amountKobo(amountKobo)
-            .holdId(holdId)
+            .holdId(hold.getId())
+            .lenderLedgerAccountId(hold.getWalletLedgerAccountId())
             .status(CommitmentStatus.ACTIVE)
             .idempotencyKey(idempotencyKey)
             .createdAt(now)

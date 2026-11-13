@@ -29,6 +29,9 @@ public class LoanResponse {
   private UUID agreementDocumentId;
   private Instant listedAt;
   private Instant expiresAt;
+  private long fundedAmountKobo;
+  private Long originationFeeKobo;
+  private Instant agreementSignedAt;
   private Instant createdAt;
   private Instant updatedAt;
   private ScheduleResponse schedule;

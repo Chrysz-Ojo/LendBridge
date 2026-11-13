@@ -1,0 +1,49 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-funding-saga-loan-columns
+      author: lendbridge
+      comment: >
+        The funding saga's new per-loan state (docs/adr/0018-funding-saga-event-choreography.md):
+        running funded total, the origination fee computed at signing, and when it was signed.
+      changes:
+        - addColumn:
+            tableName: loan_application
+            columns:
+              - column:
+                  name: funded_amount_kobo
+                  type: bigint
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: origination_fee_kobo
+                  type: bigint
+              - column:
+                  name: agreement_signed_at
+                  type: TIMESTAMP WITH TIME ZONE
+  - changeSet:
+      id: 003-funding-saga-open-request-index
+      author: lendbridge
+      comment: >
+        Extends the open-request partial unique index (PRD E6-S5) to cover every funding-saga
+        status up to ACTIVE — a borrower with a loan already Funding/Funded/Disbursing/Active is
+        still "open," same as Draft/Under review/Listed.
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: DROP INDEX uq_loan_application_open_per_borrower
+        - sql:
+            dbms: postgresql
+            sql: >
+              CREATE UNIQUE INDEX uq_loan_application_open_per_borrower
+              ON loan_application (borrower_user_id)
+              WHERE status IN
+              ('DRAFT', 'UNDER_REVIEW', 'LISTED', 'FUNDING', 'FUNDED', 'DISBURSING', 'ACTIVE')
+      rollback:
+        - sql:
+            sql: DROP INDEX uq_loan_application_open_per_borrower
+        - sql:
+            sql: >
+              CREATE UNIQUE INDEX uq_loan_application_open_per_borrower
+              ON loan_application (borrower_user_id)
+              WHERE status IN ('DRAFT', 'UNDER_REVIEW', 'LISTED')

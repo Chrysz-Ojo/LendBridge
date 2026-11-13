@@ -16,6 +16,7 @@ import com.lendbridge.investment.model.CommitmentStatus;
 import com.lendbridge.investment.model.LoanListing;
 import com.lendbridge.investment.repository.CommitmentRepository;
 import com.lendbridge.investment.repository.LoanListingRepository;
+import com.lendbridge.investment.wallet.HoldResult;
 import com.lendbridge.investment.wallet.WalletGateway;
 import com.lendbridge.starter.exception.BadRequestException;
 import com.lendbridge.starter.exception.NotFoundException;
@@ -68,12 +69,14 @@ class CommitmentServiceImplTest {
     UUID lenderId = UUID.randomUUID();
     UUID loanId = UUID.randomUUID();
     UUID holdId = UUID.randomUUID();
+    UUID lenderLedgerAccountId = UUID.randomUUID();
     when(commitmentRepository.findByIdempotencyKey("key-1")).thenReturn(Optional.empty());
     when(loanListingRepository.findById(loanId))
         .thenReturn(Optional.of(activeListing(loanId, UUID.randomUUID(), 1_000_000L)));
     when(commitmentRepository.findAllByLoanIdAndStatus(loanId, CommitmentStatus.ACTIVE)).thenReturn(List.of());
     when(commitmentRepository.findAllByLenderUserIdAndStatus(lenderId, CommitmentStatus.ACTIVE)).thenReturn(List.of());
-    when(walletGateway.createHold(anyString(), anyLong(), anyString())).thenReturn(holdId);
+    when(walletGateway.createHold(anyString(), anyLong(), anyString()))
+        .thenReturn(new HoldResult(holdId, lenderLedgerAccountId));
 
     CommitmentResponse response = service.create(lenderId, loanId, new CommitmentRequest(600_000L), "key-1");
 
@@ -83,6 +86,7 @@ class CommitmentServiceImplTest {
     ArgumentCaptor<Commitment> captor = ArgumentCaptor.forClass(Commitment.class);
     verify(commitmentRepository).save(captor.capture());
     assertThat(captor.getValue().getHoldId()).isEqualTo(holdId);
+    assertThat(captor.getValue().getLenderLedgerAccountId()).isEqualTo(lenderLedgerAccountId);
     verify(outboxEventWriter).write(any(), any(), any(), any());
   }
 
@@ -133,7 +137,8 @@ class CommitmentServiceImplTest {
         .thenReturn(Optional.of(activeListing(loanId, UUID.randomUUID(), 5_000_000L)));
     when(commitmentRepository.findAllByLoanIdAndStatus(loanId, CommitmentStatus.ACTIVE)).thenReturn(List.of());
     when(commitmentRepository.findAllByLenderUserIdAndStatus(lenderId, CommitmentStatus.ACTIVE)).thenReturn(List.of());
-    when(walletGateway.createHold(any(), anyLong(), any())).thenReturn(UUID.randomUUID());
+    when(walletGateway.createHold(any(), anyLong(), any()))
+        .thenReturn(new HoldResult(UUID.randomUUID(), UUID.randomUUID()));
 
     // 100% of this lender's (so far empty) portfolio, would fail the 20% cap for a second
     // commitment — but a lender's very first commitment is unavoidably 100% of nothing yet.

@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "LoanRepaid",
+  "namespace": "com.lendbridge.loan.avro",
+  "doc": "Published once a loan's final instalment is marked Paid and the loan transitions to Repaid.",
+  "fields": [
+    {"name": "loanId", "type": "string"},
+    {"name": "borrowerUserId", "type": "string"},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

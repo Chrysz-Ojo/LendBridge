@@ -1,0 +1,48 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-holding
+      author: lendbridge
+      comment: >
+        PRD E3-S5's "holdings" — one row per commitment once its loan disburses (funding saga
+        Stage 9). No portfolio-performance screen yet; just the data existing.
+      changes:
+        - createTable:
+            tableName: holding
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: lender_user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: loan_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount_kobo
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: holding
+            indexName: idx_holding_lender_user_id
+            columns:
+              - column:
+                  name: lender_user_id
