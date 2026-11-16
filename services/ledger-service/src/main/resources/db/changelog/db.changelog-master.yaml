@@ -11,3 +11,5 @@ databaseChangeLog:
       file: db/changelog/changes/005-processed-event.yaml
   - include:
       file: db/changelog/changes/006-seed-payment-clearing-account.yaml
+  - include:
+      file: db/changelog/changes/007-seed-loan-accounts.yaml

@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "name": "WalletRepaymentAccountConfirmed",
+  "namespace": "com.lendbridge.wallet.avro",
+  "doc": "Published after confirming the borrower's wallet ledger account for one repayment instalment, triggered by loan.repayment.requested. Deliberately a separate topic from wallet.borrower-account.assembled (the disbursement-time equivalent) so the two sagas' joins never cross-talk on the same loanId.",
+  "fields": [
+    {"name": "loanId", "type": "string"},
+    {"name": "instalmentId", "type": "string"},
+    {"name": "success", "type": "boolean"},
+    {"name": "borrowerLedgerAccountId", "type": ["null", "string"], "default": null},
+    {"name": "failureReason", "type": ["null", "string"], "default": null},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

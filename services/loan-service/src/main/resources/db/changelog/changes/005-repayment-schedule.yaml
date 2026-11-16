@@ -1,0 +1,98 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-repayment-schedule
+      author: lendbridge
+      comment: >
+        Funding saga Stage 8: the instalment schedule, persisted for the first time (previously
+        only ever a request-time preview, see RepaymentScheduleCalculator) once a loan disburses.
+      changes:
+        - createTable:
+            tableName: repayment_schedule
+            columns:
+              - column:
+                  name: loan_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: total_principal_kobo
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_interest_kobo
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_repayment_kobo
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 005-instalment
+      author: lendbridge
+      changes:
+        - createTable:
+            tableName: instalment
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: loan_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: instalment_number
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: due_date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: principal_kobo
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: interest_kobo
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_kobo
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: paid_at
+                  type: TIMESTAMP WITH TIME ZONE
+        - createIndex:
+            tableName: instalment
+            indexName: idx_instalment_loan_id
+            columns:
+              - column:
+                  name: loan_id
+        - addUniqueConstraint:
+            tableName: instalment
+            columnNames: loan_id, instalment_number
+            constraintName: uq_instalment_loan_id_instalment_number

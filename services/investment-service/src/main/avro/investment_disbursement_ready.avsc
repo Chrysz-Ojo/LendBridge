@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "InvestmentDisbursementReady",
+  "namespace": "com.lendbridge.investment.avro",
+  "doc": "Published once every lender hold for a loan has been captured, with the full set of ledger postings needed to disburse: each lender's ledger account to debit, the borrower's ledger account to credit, and the origination fee to carve out.",
+  "fields": [
+    {"name": "loanId", "type": "string"},
+    {"name": "borrowerLedgerAccountId", "type": "string"},
+    {"name": "originationFeeKobo", "type": "long"},
+    {"name": "totalKobo", "type": "long"},
+    {"name": "legs", "type": {"type": "array", "items": {
+      "type": "record", "name": "DisbursementLeg",
+      "fields": [
+        {"name": "lenderLedgerAccountId", "type": "string"},
+        {"name": "amountKobo", "type": "long"}
+      ]
+    }}},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

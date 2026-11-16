@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "WalletBorrowerAccountAssembled",
+  "namespace": "com.lendbridge.wallet.avro",
+  "doc": "Published after ensuring the borrower's wallet has a provisioned ledger account, triggered by loan.agreement.signed. success distinguishes outcome - one topic for both, per this build's topic-consolidation convention.",
+  "fields": [
+    {"name": "loanId", "type": "string"},
+    {"name": "success", "type": "boolean"},
+    {"name": "borrowerLedgerAccountId", "type": ["null", "string"], "default": null},
+    {"name": "failureReason", "type": ["null", "string"], "default": null},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

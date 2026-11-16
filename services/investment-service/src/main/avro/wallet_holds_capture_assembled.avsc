@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "WalletHoldsCaptureAssembled",
+  "namespace": "com.lendbridge.wallet.avro",
+  "doc": "Published after attempting to capture every hold named in an investment.holds.capture-requested event. success distinguishes outcome - one topic for both, per this build's topic-consolidation convention.",
+  "fields": [
+    {"name": "loanId", "type": "string"},
+    {"name": "success", "type": "boolean"},
+    {"name": "holdIds", "type": {"type": "array", "items": "string"}},
+    {"name": "failureReason", "type": ["null", "string"], "default": null},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

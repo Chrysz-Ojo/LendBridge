@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "LedgerLoanRepaymentCompleted",
+  "namespace": "com.lendbridge.ledger.avro",
+  "doc": "Published after attempting to post one repayment instalment's journal entry (borrower debit, lenders credit pro rata). success distinguishes outcome - one topic for both, per this build's topic-consolidation convention, rather than separate .completed/.failed topics.",
+  "fields": [
+    {"name": "loanId", "type": "string"},
+    {"name": "instalmentId", "type": "string"},
+    {"name": "success", "type": "boolean"},
+    {"name": "reason", "type": ["null", "string"], "default": null},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "LoanDisbursed",
+  "namespace": "com.lendbridge.loan.avro",
+  "doc": "Published once ledger-service confirms the disbursement journal entries posted and loan-service has transitioned the loan to ACTIVE. Triggers investment-service's Stage 9: creating one Holding row per commitment on the loan.",
+  "fields": [
+    {"name": "loanId", "type": "string"},
+    {"name": "borrowerUserId", "type": "string"},
+    {"name": "amountKobo", "type": "long"},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

@@ -3,6 +3,7 @@ package com.lendbridge.loan.controller;
 import com.lendbridge.loan.dto.AgreementResponse;
 import com.lendbridge.loan.dto.CreateLoanRequest;
 import com.lendbridge.loan.dto.LoanResponse;
+import com.lendbridge.loan.dto.RepaymentRequest;
 import com.lendbridge.loan.dto.ScheduleResponse;
 import com.lendbridge.loan.security.CurrentUser;
 import com.lendbridge.loan.service.LoanService;
@@ -71,6 +72,19 @@ public class LoanController {
   public ResponseEntity<ApiResponse<AgreementResponse>> generateAgreement(
       Authentication authentication, @PathVariable UUID id) {
     AgreementResponse response = loanService.generateAgreement(CurrentUser.idFrom(authentication), id);
+    return ResponseEntity.ok(ApiResponse.success(response));
+  }
+
+  @PostMapping("/{id}/agreement/sign")
+  public ResponseEntity<ApiResponse<LoanResponse>> signAgreement(Authentication authentication, @PathVariable UUID id) {
+    LoanResponse response = loanService.signAgreement(CurrentUser.idFrom(authentication), id);
+    return ResponseEntity.ok(ApiResponse.success(response));
+  }
+
+  @PostMapping("/{id}/repayments")
+  public ResponseEntity<ApiResponse<LoanResponse>> requestRepayment(
+      Authentication authentication, @PathVariable UUID id, @Valid @RequestBody RepaymentRequest request) {
+    LoanResponse response = loanService.requestRepayment(CurrentUser.idFrom(authentication), id, request);
     return ResponseEntity.ok(ApiResponse.success(response));
   }
 }

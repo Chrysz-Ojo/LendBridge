@@ -24,13 +24,12 @@ public class WalletGateway {
 
   @CircuitBreaker(name = "walletService", fallbackMethod = "createHoldFallback")
   @Retry(name = "walletService")
-  public UUID createHold(String idempotencyKey, long amountKobo, String reference) {
-    HoldResult result = walletClient.createHold(idempotencyKey, new CreateHoldCommand(amountKobo, reference)).getData();
-    return result.getId();
+  public HoldResult createHold(String idempotencyKey, long amountKobo, String reference) {
+    return walletClient.createHold(idempotencyKey, new CreateHoldCommand(amountKobo, reference)).getData();
   }
 
   @SuppressWarnings("unused") // invoked reflectively by Resilience4j as createHold's fallback
-  private UUID createHoldFallback(String idempotencyKey, long amountKobo, String reference, Throwable cause) {
+  private HoldResult createHoldFallback(String idempotencyKey, long amountKobo, String reference, Throwable cause) {
     log.warn("wallet-service unreachable while creating a hold", cause);
     throw new DependencyUnavailableException(
         "WALLET_SERVICE_UNAVAILABLE", "Unable to reserve funds: " + cause.getMessage());

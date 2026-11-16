@@ -14,4 +14,9 @@ import lombok.Setter;
 @AllArgsConstructor
 public class HoldResult {
   private UUID id;
+
+  /** Free data as of the funding saga: wallet-service's {@code createHold} response now carries
+   * this so a {@code Commitment} can store its lender's ledger account at creation time, with no
+   * extra cross-service call needed later when disbursement legs are assembled. */
+  private UUID walletLedgerAccountId;
 }

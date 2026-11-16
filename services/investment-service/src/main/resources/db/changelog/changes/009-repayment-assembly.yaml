@@ -1,0 +1,47 @@
+databaseChangeLog:
+  - changeSet:
+      id: 009-repayment-assembly
+      author: lendbridge
+      comment: >
+        The repayment saga's aggregator, keyed by instalmentId: joins loan.repayment.requested
+        (the amount) and wallet.repayment-account.confirmed before acting. Same shape as
+        disbursement_assembly, deliberately a second concrete table rather than one generalized
+        table — only two known uses.
+      changes:
+        - createTable:
+            tableName: repayment_assembly
+            columns:
+              - column:
+                  name: instalment_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: loan_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_kobo
+                  type: bigint
+              - column:
+                  name: requested_received
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: account_confirmed
+                  type: boolean
+              - column:
+                  name: borrower_ledger_account_id
+                  type: uuid
+              - column:
+                  name: failure_reason
+                  type: varchar(1000)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false

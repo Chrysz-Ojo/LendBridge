@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "InvestmentHoldsCaptureRequested",
+  "namespace": "com.lendbridge.investment.avro",
+  "doc": "Published once a loan's agreement is signed - the full set of lender holds to capture (convert from a reservation into a real ledger debit) before disbursement can proceed.",
+  "fields": [
+    {"name": "loanId", "type": "string"},
+    {"name": "holdIds", "type": {"type": "array", "items": "string"}},
+    {"name": "totalKobo", "type": "long"},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

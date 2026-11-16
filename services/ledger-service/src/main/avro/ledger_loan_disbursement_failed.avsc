@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "LedgerLoanDisbursementFailed",
+  "namespace": "com.lendbridge.ledger.avro",
+  "doc": "Published if posting the disbursement journal entries fails after lender holds were already captured - the trigger for investment-service to restore those holds (the one compensating action in this saga).",
+  "fields": [
+    {"name": "loanId", "type": "string"},
+    {"name": "reason", "type": "string"},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

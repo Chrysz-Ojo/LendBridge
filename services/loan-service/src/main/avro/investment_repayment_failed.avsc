@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "InvestmentRepaymentFailed",
+  "namespace": "com.lendbridge.investment.avro",
+  "doc": "Published if the repayment join fails before ever reaching the ledger (e.g. the borrower's wallet account couldn't be confirmed) - loan-service reverts the instalment Requested -> Pending so the borrower can retry. Unlike the disbursement saga, no holds are involved in repayment, so there is nothing else to compensate.",
+  "fields": [
+    {"name": "loanId", "type": "string"},
+    {"name": "instalmentId", "type": "string"},
+    {"name": "reason", "type": "string"},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

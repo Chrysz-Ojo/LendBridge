@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "LoanRepaymentRequested",
+  "namespace": "com.lendbridge.loan.avro",
+  "doc": "Published when a borrower requests payment of their next outstanding instalment (wallet-funded only in this phase). Triggers the two independent legs of the repayment saga: investment-service computing pro-rata lender shares, wallet-service confirming the borrower's ledger account.",
+  "fields": [
+    {"name": "loanId", "type": "string"},
+    {"name": "instalmentId", "type": "string"},
+    {"name": "borrowerUserId", "type": "string"},
+    {"name": "amountKobo", "type": "long"},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

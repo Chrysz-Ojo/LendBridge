@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "LoanAgreementSigned",
+  "namespace": "com.lendbridge.loan.avro",
+  "doc": "Published once a borrower signs their loan agreement - triggers the two independent legs of the funding saga's Stage 3 (lender hold capture on investment-service, borrower ledger account provisioning here on wallet-service).",
+  "fields": [
+    {"name": "loanId", "type": "string"},
+    {"name": "borrowerUserId", "type": "string"},
+    {"name": "amountKobo", "type": "long"},
+    {"name": "originationFeeKobo", "type": "long"},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

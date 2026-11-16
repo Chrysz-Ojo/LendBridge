@@ -9,6 +9,10 @@ import com.lendbridge.wallet.avro.WalletBankAccountVerified;
 import com.lendbridge.wallet.avro.WalletCreated;
 import com.lendbridge.wallet.avro.WalletHoldCreated;
 import com.lendbridge.wallet.avro.WalletHoldReleased;
+import com.lendbridge.wallet.avro.WalletBorrowerAccountAssembled;
+import com.lendbridge.wallet.avro.WalletHoldsCaptureAssembled;
+import com.lendbridge.wallet.avro.WalletHoldsRestored;
+import com.lendbridge.wallet.avro.WalletRepaymentAccountConfirmed;
 import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -39,9 +43,68 @@ public class OutboxRelay extends AbstractOutboxRelay {
       case KafkaTopics.WALLET_HOLD_CREATED -> publishHoldCreated(event);
       case KafkaTopics.WALLET_HOLD_RELEASED -> publishHoldReleased(event);
       case KafkaTopics.WALLET_BANK_ACCOUNT_VERIFIED -> publishBankAccountVerified(event);
+      case KafkaTopics.WALLET_HOLDS_CAPTURE_ASSEMBLED -> publishHoldsCaptureAssembled(event);
+      case KafkaTopics.WALLET_HOLDS_RESTORED -> publishHoldsRestored(event);
+      case KafkaTopics.WALLET_BORROWER_ACCOUNT_ASSEMBLED -> publishBorrowerAccountAssembled(event);
+      case KafkaTopics.WALLET_REPAYMENT_ACCOUNT_CONFIRMED -> publishRepaymentAccountConfirmed(event);
       default ->
           throw new IllegalStateException("Unknown outbox event type: " + event.getEventType());
     }
+  }
+
+  private void publishHoldsCaptureAssembled(OutboxEvent event) throws Exception {
+    WalletHoldsCaptureAssembledPayload payload =
+        objectMapper.readValue(event.getPayload(), WalletHoldsCaptureAssembledPayload.class);
+    WalletHoldsCaptureAssembled avroValue =
+        WalletHoldsCaptureAssembled.newBuilder()
+            .setLoanId(payload.getLoanId())
+            .setSuccess(payload.isSuccess())
+            .setHoldIds(payload.getHoldIds())
+            .setFailureReason(payload.getFailureReason())
+            .setOccurredAtEpochMillis(payload.getOccurredAtEpochMillis())
+            .build();
+    send(KafkaTopics.WALLET_HOLDS_CAPTURE_ASSEMBLED, event, avroValue);
+  }
+
+  private void publishHoldsRestored(OutboxEvent event) throws Exception {
+    WalletHoldsRestoredPayload payload =
+        objectMapper.readValue(event.getPayload(), WalletHoldsRestoredPayload.class);
+    WalletHoldsRestored avroValue =
+        WalletHoldsRestored.newBuilder()
+            .setLoanId(payload.getLoanId())
+            .setHoldIds(payload.getHoldIds())
+            .setOccurredAtEpochMillis(payload.getOccurredAtEpochMillis())
+            .build();
+    send(KafkaTopics.WALLET_HOLDS_RESTORED, event, avroValue);
+  }
+
+  private void publishBorrowerAccountAssembled(OutboxEvent event) throws Exception {
+    WalletBorrowerAccountAssembledPayload payload =
+        objectMapper.readValue(event.getPayload(), WalletBorrowerAccountAssembledPayload.class);
+    WalletBorrowerAccountAssembled avroValue =
+        WalletBorrowerAccountAssembled.newBuilder()
+            .setLoanId(payload.getLoanId())
+            .setSuccess(payload.isSuccess())
+            .setBorrowerLedgerAccountId(payload.getBorrowerLedgerAccountId())
+            .setFailureReason(payload.getFailureReason())
+            .setOccurredAtEpochMillis(payload.getOccurredAtEpochMillis())
+            .build();
+    send(KafkaTopics.WALLET_BORROWER_ACCOUNT_ASSEMBLED, event, avroValue);
+  }
+
+  private void publishRepaymentAccountConfirmed(OutboxEvent event) throws Exception {
+    WalletRepaymentAccountConfirmedPayload payload =
+        objectMapper.readValue(event.getPayload(), WalletRepaymentAccountConfirmedPayload.class);
+    WalletRepaymentAccountConfirmed avroValue =
+        WalletRepaymentAccountConfirmed.newBuilder()
+            .setLoanId(payload.getLoanId())
+            .setInstalmentId(payload.getInstalmentId())
+            .setSuccess(payload.isSuccess())
+            .setBorrowerLedgerAccountId(payload.getBorrowerLedgerAccountId())
+            .setFailureReason(payload.getFailureReason())
+            .setOccurredAtEpochMillis(payload.getOccurredAtEpochMillis())
+            .build();
+    send(KafkaTopics.WALLET_REPAYMENT_ACCOUNT_CONFIRMED, event, avroValue);
   }
 
   private void publishWalletCreated(OutboxEvent event) throws Exception {

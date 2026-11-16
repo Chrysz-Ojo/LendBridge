@@ -1,8 +1,12 @@
 package com.lendbridge.loan.outbox;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lendbridge.loan.avro.LoanAgreementSigned;
 import com.lendbridge.loan.avro.LoanDelisted;
+import com.lendbridge.loan.avro.LoanDisbursed;
 import com.lendbridge.loan.avro.LoanListed;
+import com.lendbridge.loan.avro.LoanRepaid;
+import com.lendbridge.loan.avro.LoanRepaymentRequested;
 import com.lendbridge.loan.avro.LoanSubmitted;
 import com.lendbridge.starter.outbox.AbstractOutboxRelay;
 import com.lendbridge.starter.outbox.CloudEventHeaders;
@@ -37,6 +41,10 @@ public class OutboxRelay extends AbstractOutboxRelay {
       case KafkaTopics.LOAN_SUBMITTED -> publishLoanSubmitted(event);
       case KafkaTopics.LOAN_LISTED -> publishLoanListed(event);
       case KafkaTopics.LOAN_DELISTED -> publishLoanDelisted(event);
+      case KafkaTopics.LOAN_AGREEMENT_SIGNED -> publishLoanAgreementSigned(event);
+      case KafkaTopics.LOAN_DISBURSED -> publishLoanDisbursed(event);
+      case KafkaTopics.LOAN_REPAYMENT_REQUESTED -> publishLoanRepaymentRequested(event);
+      case KafkaTopics.LOAN_REPAID -> publishLoanRepaid(event);
       default -> throw new IllegalStateException("Unknown outbox event type: " + event.getEventType());
     }
   }
@@ -75,6 +83,57 @@ public class OutboxRelay extends AbstractOutboxRelay {
             .setOccurredAtEpochMillis(payload.getOccurredAtEpochMillis())
             .build();
     send(KafkaTopics.LOAN_DELISTED, event, avroValue);
+  }
+
+  private void publishLoanAgreementSigned(OutboxEvent event) throws Exception {
+    LoanAgreementSignedPayload payload =
+        objectMapper.readValue(event.getPayload(), LoanAgreementSignedPayload.class);
+    LoanAgreementSigned avroValue =
+        LoanAgreementSigned.newBuilder()
+            .setLoanId(payload.getLoanId().toString())
+            .setBorrowerUserId(payload.getBorrowerUserId().toString())
+            .setAmountKobo(payload.getAmountKobo())
+            .setOriginationFeeKobo(payload.getOriginationFeeKobo())
+            .setOccurredAtEpochMillis(payload.getOccurredAtEpochMillis())
+            .build();
+    send(KafkaTopics.LOAN_AGREEMENT_SIGNED, event, avroValue);
+  }
+
+  private void publishLoanDisbursed(OutboxEvent event) throws Exception {
+    LoanDisbursedPayload payload = objectMapper.readValue(event.getPayload(), LoanDisbursedPayload.class);
+    LoanDisbursed avroValue =
+        LoanDisbursed.newBuilder()
+            .setLoanId(payload.getLoanId().toString())
+            .setBorrowerUserId(payload.getBorrowerUserId().toString())
+            .setAmountKobo(payload.getAmountKobo())
+            .setOccurredAtEpochMillis(payload.getOccurredAtEpochMillis())
+            .build();
+    send(KafkaTopics.LOAN_DISBURSED, event, avroValue);
+  }
+
+  private void publishLoanRepaymentRequested(OutboxEvent event) throws Exception {
+    LoanRepaymentRequestedPayload payload =
+        objectMapper.readValue(event.getPayload(), LoanRepaymentRequestedPayload.class);
+    LoanRepaymentRequested avroValue =
+        LoanRepaymentRequested.newBuilder()
+            .setLoanId(payload.getLoanId().toString())
+            .setInstalmentId(payload.getInstalmentId().toString())
+            .setBorrowerUserId(payload.getBorrowerUserId().toString())
+            .setAmountKobo(payload.getAmountKobo())
+            .setOccurredAtEpochMillis(payload.getOccurredAtEpochMillis())
+            .build();
+    send(KafkaTopics.LOAN_REPAYMENT_REQUESTED, event, avroValue);
+  }
+
+  private void publishLoanRepaid(OutboxEvent event) throws Exception {
+    LoanRepaidPayload payload = objectMapper.readValue(event.getPayload(), LoanRepaidPayload.class);
+    LoanRepaid avroValue =
+        LoanRepaid.newBuilder()
+            .setLoanId(payload.getLoanId().toString())
+            .setBorrowerUserId(payload.getBorrowerUserId().toString())
+            .setOccurredAtEpochMillis(payload.getOccurredAtEpochMillis())
+            .build();
+    send(KafkaTopics.LOAN_REPAID, event, avroValue);
   }
 
   private void send(String topic, OutboxEvent event, Object avroValue) throws Exception {

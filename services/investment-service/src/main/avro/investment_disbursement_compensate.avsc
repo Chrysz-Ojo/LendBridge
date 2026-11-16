@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "InvestmentDisbursementCompensate",
+  "namespace": "com.lendbridge.investment.avro",
+  "doc": "Published if disbursement fails after lender holds were already captured - the one compensating action in the funding saga: restore these holds to ACTIVE.",
+  "fields": [
+    {"name": "loanId", "type": "string"},
+    {"name": "holdIds", "type": {"type": "array", "items": "string"}},
+    {"name": "occurredAtEpochMillis", "type": "long"}
+  ]
+}

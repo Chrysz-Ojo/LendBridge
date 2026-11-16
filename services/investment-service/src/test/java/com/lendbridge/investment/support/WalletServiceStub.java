@@ -73,6 +73,7 @@ public final class WalletServiceStub {
       holdsCreated.incrementAndGet();
       Map<String, Object> data = new LinkedHashMap<>();
       data.put("id", UUID.randomUUID().toString());
+      data.put("walletLedgerAccountId", UUID.randomUUID().toString());
       respond(exchange, 201, envelope(data));
       return;
     }
